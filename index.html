@@ -1,0 +1,802 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>OpenSLD · Focus redesign</title>
+  <script>document.documentElement.dataset.visual = 'gridpilot';</script>
+  <style>
+    :root {
+      --paper:#f4f4f2; --white:#fff; --soft:#f7f7f6; --ink:#0e1318;
+      --muted:#585855; --faint:#797976; --line:#e2e2df; --strong:#cbcbc7;
+      --brand:#9c7c4c; --brand-soft:#faf7f1; --red:#a3312b; --red-soft:#fff1ef;
+      --amber:#8a5b10; --amber-soft:#fff8e8;
+      --shadow:0 0 0 1px rgb(0 0 0/.05),0 2px 5px rgb(0 0 0/.04),0 14px 30px -18px rgb(0 0 0/.2);
+      --font:ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    }
+    *{box-sizing:border-box} html,body{min-height:100%;width:100%}
+    body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--font);font-synthesis:none;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale}
+    button,input,select,textarea{font:inherit} button,a,input,select,textarea{touch-action:manipulation}
+    button{cursor:pointer} button:disabled{opacity:.45;cursor:not-allowed}
+    button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible,[role=button]:focus-visible{outline:2px solid #555;outline-offset:2px}
+    button:active:not(:disabled){transform:scale(.96)} input,select,textarea{font-size:16px}
+    .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap}
+    .app{height:100dvh;min-height:620px;overflow:hidden;background:var(--white)}
+    .label{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+    .muted{color:var(--muted)} .faint{color:var(--faint)} .count{font-variant-numeric:tabular-nums}
+    .btn{min-height:40px;padding:0 12px;display:inline-flex;align-items:center;justify-content:center;gap:7px;border:1px solid var(--line);border-radius:8px;background:var(--white);color:var(--ink);font-size:13px;font-weight:580;white-space:nowrap;transition:background-color 150ms ease-out,border-color 150ms ease-out,box-shadow 150ms ease-out}
+    .btn:hover{background:var(--soft);border-color:var(--strong)} .btn.primary{background:var(--ink);border-color:var(--ink);color:#fff}.btn.primary:hover{background:#252a30}
+    .btn.quiet{border-color:transparent;background:transparent}.btn.quiet:hover{background:var(--soft)} .btn.icon{width:40px;padding:0;font-size:18px}
+    .pill{display:inline-flex;align-items:center;min-height:25px;padding:0 8px;border-radius:5px;background:var(--soft);color:var(--muted);font-size:12px;white-space:nowrap}
+    .pill.draft{background:var(--brand-soft);color:#705833}.pill.red{background:var(--red-soft);color:var(--red)}.pill.amber{background:var(--amber-soft);color:var(--amber)}
+    .brand{display:flex;align-items:center;gap:9px;font-size:18px;font-weight:750;letter-spacing:-.04em;white-space:nowrap}.brand svg{flex:none}
+    .bar{height:64px;display:flex;align-items:center;gap:14px;padding:0 18px;border-bottom:1px solid var(--line);background:#fff}
+    .bar .sep{height:24px;width:1px;background:var(--line)}.bar .spacer,.spacer{flex:1}
+    .crumb{min-width:0;display:flex;align-items:center;gap:8px;color:var(--faint);font-size:13px}.crumb strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--ink)}
+    .bar-right{display:flex;align-items:center;gap:8px}.tabset{display:flex;gap:3px;padding:3px;border-radius:9px;background:var(--soft)}
+    .tabset button{min-height:40px;padding:0 12px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:13px;font-weight:600}
+    .tabset button[aria-selected=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.08)}
+    .field{display:grid;gap:6px;margin:0 0 16px}.field label{font-size:12px;font-weight:650;color:var(--muted)}
+    .field input,.field textarea,.field select,.search{width:100%;min-height:40px;padding:9px 11px;border:1px solid var(--strong);border-radius:7px;background:#fff;color:var(--ink);line-height:1.35}
+    .field select{appearance:none;-webkit-appearance:none;padding-right:36px;background-image:url("assets/chevron-down.svg");background-position:right 13px center;background-repeat:no-repeat;background-size:14px 14px;cursor:pointer}
+    .field textarea{min-height:88px;resize:vertical}.search{margin:8px 0 17px}
+    .section-head{display:flex;align-items:center;justify-content:space-between;min-height:37px}.section-head .btn{min-height:30px;width:30px}
+    .tree-drawing,.tree-level,.tree-device{width:100%;display:flex;align-items:center;gap:8px;border:0;border-radius:6px;background:transparent;text-align:left;color:var(--muted)}
+    .tree-drawing{min-height:40px;padding:6px 8px;font-size:12px}.tree-drawing .truncate,.tree-device .truncate{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1}
+    .tree-drawing[aria-current=true]{background:#fff;color:var(--ink);font-weight:650;box-shadow:0 0 0 1px var(--line)}
+    .tree-level{min-height:40px;padding:5px 7px 5px 17px;font-size:12px;font-weight:650;color:var(--ink)}
+    .tree-device{min-height:40px;padding:5px 7px 5px 36px;font-size:12px}.tree-device[aria-current=true]{background:var(--brand-soft);color:var(--ink)}
+    .tree-drawing:hover,.tree-level:hover,.tree-device:hover{background:#fff;color:var(--ink)}
+    .tree-count{margin-left:auto;color:var(--faint);font-size:11px;font-variant-numeric:tabular-nums}
+    .node-mark{width:10px;height:10px;flex:none;border:1.5px solid currentColor;border-radius:2px}.node-mark.round{border-radius:50%}
+    .tree-root{padding:8px 7px;font-size:12px;font-weight:650}.tree-wrap{padding-bottom:60px}
+    .canvas{position:relative;min-width:0;min-height:0;overflow:hidden;background:#fff}
+    .canvas.surface-grid{background-image:radial-gradient(#dededb 1px,transparent 1px);background-size:24px 24px}
+    .diagram{position:absolute;inset:0;touch-action:none}.diagram[data-tool=pan]{cursor:grab}.diagram[data-tool=pan]:active{cursor:grabbing}.diagram[data-tool=area]{cursor:crosshair}
+    .diagram-inner{width:100%;height:100%;transform-origin:center}.diagram svg{width:100%;height:100%;display:block}
+    .diagram svg text{font-family:var(--font);fill:var(--ink);user-select:none}.diagram svg [data-action=select-node]{cursor:pointer}
+    .diagram svg [data-action=select-node]:hover .hit,.diagram svg [data-action=select-node].selected .hit{stroke:var(--brand);fill:var(--brand-soft)}
+    .diagram svg [data-action=select-node]:focus-visible .hit{stroke:#555;stroke-width:2}
+    .canvas-footer{position:absolute;left:16px;right:16px;bottom:72px;z-index:2;display:flex;align-items:center;gap:8px;pointer-events:none}
+    .canvas-footer>*{pointer-events:auto}
+    .canvas-chip,.zoom{display:flex;align-items:center;gap:2px;padding:3px;border-radius:9px;background:#fff;box-shadow:var(--shadow)}
+    .zoom button{min-height:40px;min-width:40px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:15px}
+    .zoom button:hover{background:var(--soft)}
+    .canvas-chip{min-height:37px;padding:0 10px;color:var(--muted);font-size:12px;white-space:nowrap}.zoom span{min-width:42px;text-align:center;font-size:12px;font-variant-numeric:tabular-nums}
+    .empty{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:min(380px,calc(100% - 40px));padding:22px;border-radius:12px;background:#fff;box-shadow:var(--shadow)}
+    .empty h2{margin:7px 0;font-size:20px;letter-spacing:-.03em}.empty p{margin:0 0 15px;color:var(--muted);font-size:13px;line-height:1.5}
+    .empty-actions{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:8px}.empty > [data-action="import-file"]{padding-left:0;text-decoration:underline;text-underline-offset:3px;color:var(--muted)}
+    .panel{min-height:0;display:flex;flex-direction:column;background:#fff}.panel-head{min-height:58px;padding:0 16px;display:flex;align-items:center;justify-content:space-between;gap:8px;border-bottom:1px solid var(--line)}
+    .panel-head h2{margin:0;font-size:14px}.panel-body{min-height:0;flex:1;overflow:auto;padding:17px}.panel-foot{padding:14px 17px;border-top:1px solid var(--line);display:flex;gap:25px}
+    .panel-foot strong{display:block;margin-top:4px;font-size:20px;font-weight:650;font-variant-numeric:tabular-nums}
+    .inspector-empty{min-height:265px;display:grid;align-content:center;justify-items:center;text-align:center}
+    .inspector-empty .symbol{width:54px;height:54px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;color:var(--faint);font-size:24px}
+    .inspector-empty h3{margin:13px 0 5px;font-size:16px}.inspector-empty p{max-width:220px;margin:0;color:var(--muted);font-size:12px;line-height:1.5}
+    .note{padding:12px;border-radius:8px;background:var(--soft);color:var(--muted);font-size:12px;line-height:1.5}
+    .review-tabs{display:flex;gap:3px;padding:3px;margin-bottom:15px;border-radius:8px;background:var(--soft)}
+    .review-tabs button{flex:1;min-height:40px;padding:0 4px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:12px}
+    .review-tabs button[aria-selected=true]{background:#fff;color:var(--ink);box-shadow:0 1px 3px rgb(0 0 0/.08)}
+    .filters{display:flex;gap:5px;margin:14px 0}.filters button{min-height:40px;padding:0 9px;border:1px solid var(--line);border-radius:6px;background:#fff;color:var(--muted);font-size:12px}
+    .filters button[aria-pressed=true]{border-color:var(--ink);color:var(--ink)}
+    .issues{display:grid;gap:8px}.issue{width:100%;display:grid;gap:5px;padding:12px;border:1px solid var(--line);border-radius:8px;background:#fff;text-align:left}
+    .issue:hover,.issue[aria-current=true]{border-color:var(--strong);box-shadow:0 2px 8px rgb(0 0 0/.05)}
+    .issue .sev{color:var(--red);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}.issue.warning .sev{color:var(--amber)}
+    .issue .copy{font-size:12px;line-height:1.45;color:var(--ink)}
+    .basis-section{padding:14px 0;border-bottom:1px solid var(--line)}.basis-section h3{margin:0 0 6px;font-size:13px}.basis-section p{margin:0;color:var(--muted);font-size:12px;line-height:1.55}
+    .drawing-select{max-width:min(390px,35vw);min-height:38px;padding:7px 9px;border:1px solid var(--line);border-radius:7px;background:#fff;color:var(--ink);text-overflow:ellipsis;font-size:13px}
+    /* Focus: canvas owns the screen, panels open on demand. */
+    .focus{position:relative}.focus>.canvas{position:absolute;inset:0}
+    .focus-top{position:absolute;z-index:3;top:15px;left:15px;right:15px;min-height:54px;display:flex;align-items:center;gap:10px;padding:6px 9px;border-radius:11px;background:#fff;box-shadow:var(--shadow)}
+    .focus-title{min-width:0;max-width:30vw;display:grid}.focus-title strong,.focus-title small{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.focus-title strong{font-size:13px}.focus-title small{color:var(--faint);font-size:11px}
+    .focus-rail{position:absolute;z-index:3;top:85px;left:15px;display:grid;gap:2px;padding:4px;border-radius:10px;background:#fff;box-shadow:var(--shadow)}
+    .focus-rail button{width:44px;height:44px;border:0;border-radius:6px;background:transparent;color:var(--muted);font-size:17px}
+    .focus-rail button[aria-pressed=true]{background:var(--ink);color:#fff}.focus-rail button:hover{background:var(--soft);color:var(--ink)}
+    .focus-sheet{position:absolute;z-index:3;top:85px;right:15px;bottom:73px;width:min(350px,calc(100vw - 95px));border-radius:10px;box-shadow:var(--shadow);overflow:hidden}
+    .focus-sheet .tree-wrap{padding:0 0 70px}.focus .canvas-footer{bottom:72px}
+    /* Shared drawers and local menus. */
+    .shade{position:fixed;inset:0;z-index:190;background:rgb(14 19 24/.25)}
+    .drawer{position:fixed;z-index:200;top:0;right:0;bottom:0;width:min(420px,100vw);display:flex;flex-direction:column;background:#fff;box-shadow:-10px 0 30px rgb(0 0 0/.12)}
+    .drawer-head{min-height:66px;padding:0 18px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid var(--line)}.drawer-head h2{margin:0;font-size:18px}
+    .drawer-body{flex:1;min-height:0;overflow:auto;padding:18px}.drawer-foot{padding:16px 18px 24px;border-top:1px solid var(--line)}
+    .palette-grid{display:grid;grid-template-columns:minmax(0,1fr);gap:2px;margin:8px 0 18px}
+    .palette-grid button{width:100%;min-height:44px;display:flex;align-items:center;gap:10px;padding:4px 2px;border:0;border-radius:7px;background:transparent;text-align:left;color:var(--ink);font-size:13px}
+    .palette-grid button[hidden]{display:none}
+    .palette-grid button:hover,.palette-grid button[aria-pressed=true]{background:var(--soft)}
+    .glyph{width:36px;height:36px;flex:none;display:grid;place-items:center;border:1px solid var(--line);border-radius:6px;background:#fff;font-size:16px}
+    .palette-name{min-width:0;flex:1}
+    .palette-add{width:22px;flex:none;display:grid;place-items:center;color:var(--faint);font-size:20px;line-height:1}
+    .message{max-width:92%;padding:10px 12px;margin-bottom:10px;border-radius:9px;background:var(--soft);font-size:13px;line-height:1.5;overflow-wrap:break-word}
+    .message.user{margin-left:auto;background:var(--ink);color:#fff}.message small{display:block;margin-bottom:3px;color:var(--faint);font-size:10px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+    .message.user small{color:#ccc}.menu{position:absolute;z-index:100;right:16px;top:58px;min-width:224px;padding:6px;border-radius:9px;background:#fff;box-shadow:var(--shadow)}
+    .menu button{width:100%;min-height:37px;padding:0 9px;border:0;border-radius:5px;background:transparent;text-align:left;color:var(--ink);font-size:13px}.menu button:hover{background:var(--soft)}
+    .menu-title{padding:7px 9px;color:var(--faint);font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase}.menu hr{border:0;border-top:1px solid var(--line);margin:5px}
+    .toast{position:fixed;z-index:220;right:22px;bottom:80px;max-width:340px;padding:12px 15px;border-radius:8px;background:var(--ink);color:#fff;box-shadow:var(--shadow);font-size:13px}
+    @media(hover:hover) and (pointer:fine){.btn:hover,.tree-drawing:hover,.tree-level:hover,.tree-device:hover,.issue:hover{transition-duration:150ms}}
+    @media(prefers-reduced-motion:reduce){.btn,.tree-drawing,.tree-level,.tree-device,.issue{transition:none}}
+    #print-project{display:none}
+    @media print{#stage{display:none!important}#print-project{display:block!important}.print-sheet{page-break-after:always;min-height:95vh;padding:20px}.print-sheet h1{font-size:18px}.print-sheet svg{display:block;width:100%;height:78vh}}
+    :root{
+      --weight-regular:400;--weight-medium:500;--weight-semibold:600;--weight-bold:700;
+      --z-floating:10;--z-menu:30;--z-shade:100;--z-dialog:110;--z-toast:120;
+      --elevation-raised:0 0 0 1px rgb(0 0 0/.055),0 2px 6px rgb(0 0 0/.055),0 16px 32px -20px rgb(0 0 0/.18);
+      --elevation-hover:0 0 0 1px rgb(0 0 0/.075),0 3px 9px rgb(0 0 0/.075),0 18px 36px -20px rgb(0 0 0/.2);
+      --hairline:1px;
+    }
+    @media(min-resolution:2dppx){:root{--hairline:.5px}}
+    ::selection{background:#dedfdb;color:var(--ink)}
+    h1,h2,h3{text-wrap:balance}
+    .focus{isolation:isolate;background:#fbfbfa}
+    .focus>.canvas{background:#fbfbfa}
+    .focus>.canvas.surface-grid{background-color:#fbfbfa;background-image:radial-gradient(#e4e4df 1px,transparent 1px);background-size:24px 24px}
+    .focus .diagram[data-overview=true]{top:88px;bottom:60px}
+    .focus-top{z-index:var(--z-floating);top:14px;left:14px;right:14px;min-height:54px;padding:3px 7px 3px 11px;gap:8px;border-radius:10px;box-shadow:var(--elevation-raised)}
+    .focus-top .brand{padding-right:11px;border-right:var(--hairline) solid var(--line);font-size:15px}
+    .focus-top .brand svg{width:24px;height:26px}
+    .focus-project{min-width:98px;min-height:40px;display:flex;align-items:center;padding:1px 6px;border:0;border-radius:6px;background:transparent;text-align:left;color:var(--ink)}
+    .focus-project:hover,.focus-project:focus-visible{background:var(--soft)}
+    .focus-project strong{overflow:hidden;text-overflow:ellipsis;font-size:12px;font-weight:var(--weight-semibold);white-space:nowrap}
+    .focus-drawing{min-width:0;width:min(290px,29vw);max-width:290px;display:flex;align-items:center;gap:8px;padding-left:2px}
+    .focus-drawing .label{flex:none;font-size:10px;letter-spacing:.11em;white-space:nowrap}
+    .focus-drawing .drawing-picker{position:relative;min-width:0;flex:1}
+    .focus-drawing .drawing-select{display:block;width:100%;max-width:100%;min-height:40px;padding:4px 36px 4px 8px;appearance:none;-webkit-appearance:none;border-color:var(--line);background-color:#fff;font-size:12px;font-weight:var(--weight-semibold);cursor:pointer}
+    .focus-drawing .drawing-select:hover{border-color:var(--strong);background-color:var(--soft)}
+    .focus-drawing .drawing-chevron{position:absolute;top:50%;right:13px;display:grid;width:14px;height:14px;place-items:center;color:var(--muted);pointer-events:none;transform:translateY(-50%)}
+    .focus-drawing .drawing-chevron svg{width:14px;height:14px}
+    .focus-save{display:flex;align-items:center;gap:7px;min-height:36px;color:var(--faint);font-size:12px;white-space:nowrap}
+    .save-dot{width:7px;height:7px;border-radius:50%;background:var(--brand)}
+    .focus-top .tabset{flex:none;gap:4px;padding:2px}
+    .focus-top .tabset button{position:relative;min-width:48px;min-height:36px;padding-inline:9px;font-size:12px;font-weight:var(--weight-semibold)}
+    .focus-top .btn{position:relative;min-height:36px;padding-inline:10px;font-size:12px}
+    .focus-top .btn.icon{min-width:36px;min-height:36px;width:36px}
+    .focus-top .btn::before,.focus-top .tabset button::before{content:"";position:absolute;inset:-2px}
+    .focus-top .btn svg{flex:none}
+    .focus-top [data-action=menu-project] svg:last-child{width:14px;height:14px;margin-left:2px}
+    .focus-rail{z-index:var(--z-floating);top:auto;bottom:14px;left:50%;display:flex;align-items:center;gap:2px;padding:4px;border-radius:10px;box-shadow:var(--elevation-raised);transform:translateX(-50%)}
+    .focus-rail button{position:relative;width:40px;height:40px;flex:0 0 40px;display:grid;place-items:center;color:#646968;transition:color 150ms ease-out,background-color 150ms ease-out,box-shadow 150ms ease-out}
+    .focus-rail button svg{width:17px;height:17px;pointer-events:none}
+    .focus-rail button[aria-pressed=true]{background:var(--ink);color:#fff;box-shadow:0 2px 6px rgb(0 0 0/.14)}
+    .focus-rail button[aria-pressed=true]:hover{background:#262b2f;color:#fff}
+    .focus-rail button:hover{background:#f1f2ef;color:var(--ink)}
+    .rail-divider{width:var(--hairline);height:25px;flex:0 0 var(--hairline);margin:0 5px;background:var(--line);pointer-events:none}
+    @media(hover:hover) and (pointer:fine){.focus-rail button[data-tip]:hover::after,.focus-rail button[data-tip]:focus-visible::after{content:attr(data-tip);position:absolute;left:50%;bottom:calc(100% + 11px);transform:translateX(-50%);padding:7px 9px;border-radius:5px;background:var(--ink);color:#fff;font-size:11px;font-weight:var(--weight-medium);white-space:nowrap;box-shadow:var(--elevation-raised);pointer-events:none}}
+    .focus-sheet{z-index:var(--z-floating);top:82px;right:14px;bottom:76px;width:min(320px,calc(100vw - 90px));border-radius:11px;box-shadow:var(--elevation-raised)}
+    .focus-sheet .panel-head{min-height:50px;padding:0 14px;border-bottom:var(--hairline) solid var(--line)}
+    .focus-sheet .panel-head h2{font-size:14px;font-weight:var(--weight-semibold);letter-spacing:-.02em}
+    .focus-sheet .panel-body{padding:14px}
+    .focus-sheet .panel-body .search{margin-top:0}
+    .outline-project{display:grid;gap:3px;padding:2px 0 11px;margin-bottom:11px;border-bottom:var(--hairline) solid var(--line)}
+    .outline-project button{min-height:40px;padding:0 8px;border:0;border-radius:6px;background:transparent;text-align:left;color:var(--ink);font-size:14px;font-weight:var(--weight-semibold)}
+    .outline-project button:hover{background:var(--soft)}
+    .focus-sheet .section-head .btn{min-width:40px;min-height:40px}
+    .focus-sheet .tree-drawing,.focus-sheet .tree-level,.focus-sheet .tree-device{min-height:42px}
+    .focus-sheet .tree-drawing,.focus-sheet .tree-drawing[aria-current=true]{font-weight:var(--weight-medium)}
+    .focus-sheet .inspector-empty{min-height:235px}
+    .focus-sheet .inspector-empty .symbol{width:42px;height:42px;font-size:20px}
+    .focus-sheet .inspector-empty h3{font-size:15px}
+    .focus-sheet .inspector-empty p{font-size:12px}
+    .focus-sheet .issue{transition:border-color 150ms ease-out,box-shadow 150ms ease-out}
+    .focus .canvas-footer{bottom:15px;left:14px;right:14px}
+    .focus .canvas-metrics{display:flex;align-items:center;gap:0;min-height:40px;padding:2px 4px;border-radius:9px;background:#fff;box-shadow:var(--elevation-raised)}
+    .focus .canvas-metrics span,.focus .canvas-metrics button{display:inline-flex;align-items:center;min-height:36px;padding:0 8px;color:var(--muted);font-size:11px;white-space:nowrap;font-variant-numeric:tabular-nums}
+    .focus .canvas-metrics strong{margin-right:4px;color:var(--ink);font-size:13px;font-weight:var(--weight-semibold)}
+    .focus .canvas-metrics .metric-divider{min-height:20px;width:var(--hairline);padding:0;background:var(--line)}
+    .focus .canvas-metrics button{min-height:40px;border:0;border-radius:6px;background:transparent;font-weight:var(--weight-medium);transition:background-color 150ms ease-out,color 150ms ease-out}
+    .focus .canvas-metrics button:hover{background:var(--red-soft);color:var(--red)}
+    .focus .canvas-metrics button .finding-dot{width:7px;height:7px;margin-right:7px;border-radius:50%;background:var(--red)}
+    .focus .canvas-metrics button.warning .finding-dot{background:var(--amber)}
+    .focus .canvas-metrics button.warning:hover{background:var(--amber-soft);color:var(--amber)}
+    .focus .zoom{min-height:40px;padding:2px;box-shadow:var(--elevation-raised)}
+    .focus .zoom button{min-height:40px;min-width:40px;display:grid;place-items:center}
+    .focus .zoom button svg{width:16px;height:16px;pointer-events:none}
+    .focus .zoom span{min-width:44px;font-size:11px}
+    .focus .menu{z-index:var(--z-menu);width:216px;min-width:216px;border-radius:9px;box-shadow:var(--elevation-raised)}
+    .focus .menu button{min-height:40px;font-size:12px}
+    .focus .menu button:hover{background:var(--soft)}
+    .focus .shade{z-index:var(--z-shade)}.focus .drawer{z-index:var(--z-dialog)}.focus .toast{z-index:var(--z-toast)}
+    .focus .drawer{box-shadow:-18px 0 40px rgb(0 0 0/.13)}
+    .focus .palette-grid button{transition:background-color 150ms ease-out,box-shadow 150ms ease-out}
+    .focus .palette-grid button:hover{box-shadow:none}
+    .focus .palette-grid .glyph{pointer-events:none;user-select:none}
+    .focus .palette-grid .glyph svg{width:32px;height:32px;pointer-events:none}
+    .focus-rail [data-action=assistant]{display:none}
+    .project-home{background:var(--paper);overflow:auto}
+    .project-main{max-width:1040px;margin:0 auto;padding:70px 26px}
+    .project-main h1{margin:8px 0 6px;font-size:38px;letter-spacing:-.045em}
+    .project-main p{margin:0 0 32px;color:var(--muted);font-size:14px}
+    .project-card{width:min(480px,100%);min-height:160px;display:grid;align-content:space-between;gap:14px;padding:22px;border:0;border-radius:12px;background:#fff;box-shadow:var(--elevation-raised);text-align:left;color:var(--ink);transition:box-shadow 150ms ease-out}
+    .project-card:hover{box-shadow:var(--elevation-hover)}
+    .project-card h2{margin:0;font-size:19px;letter-spacing:-.025em}
+    .project-card .pill{justify-self:start}
+    .project-controls{display:flex;gap:10px;max-width:650px;margin:0 0 24px}.project-controls .search{max-width:340px}.project-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:18px}.project-card{width:100%;padding:0;display:block;overflow:hidden}.project-open{width:100%;display:grid;gap:16px;padding:22px;border:0;background:transparent;text-align:left;color:inherit;cursor:pointer}.project-operations{display:flex;gap:4px;border-top:1px solid var(--line);padding:8px 12px}.project-operations .btn{font-size:12px}
+    .basis-page{position:absolute;inset:86px 16px 16px;overflow:auto;background:#fff;border:1px solid var(--line);border-radius:14px;padding:84px max(28px,calc((100% - 920px)/2)) 48px;box-shadow:var(--elevation-raised)}
+    .basis-page-header{margin-bottom:34px}.basis-page-header h1{font-size:27px;line-height:1.2;letter-spacing:-.04em;max-width:720px}.basis-page-header p{color:var(--muted);font-size:13px}.basis-page-header .search{max-width:380px;margin-top:18px}
+    .basis-report-section{border-top:1px solid var(--line);padding:24px 0;max-width:820px}.basis-report-section h2{font-size:15px;letter-spacing:.01em;margin:0 0 12px}.basis-report-section p{white-space:pre-wrap;line-height:1.65;font-size:13px;color:var(--ink);margin:0}
+    .focus-sheet:has(.agent-footer){width:min(360px,calc(100vw - 90px))}
+    .agent-footer{padding:12px 13px 14px}
+    .agent-composer{overflow:hidden;border:1px solid var(--strong);border-radius:15px;background:#fff;transition:border-color 150ms ease-out,box-shadow 150ms ease-out}
+    .agent-composer:focus-within{border-color:#68757d;box-shadow:0 0 0 2px rgb(104 117 125/.12)}
+    .agent-composer textarea{display:block;width:100%;min-height:100px;max-height:35vh;margin:0;padding:13px 12px 3px;resize:vertical;border:0;background:transparent;color:var(--ink);font-size:13px;line-height:1.45}
+    .agent-composer textarea::placeholder{color:var(--faint)}
+    .agent-composer textarea:focus-visible{outline:none}
+    .agent-composer-actions{display:flex;align-items:center;flex-wrap:wrap;gap:5px;padding:5px 8px 8px}
+    .agent-tools{display:flex;align-items:center;gap:3px}
+    .agent-composer .agent-tools .btn{width:32px;min-width:32px;min-height:32px;height:32px;padding:0;border:0;border-radius:7px;background:transparent;color:var(--muted)}
+    .agent-composer .agent-tools .btn:hover{background:var(--soft);color:var(--ink)}
+    .agent-composer .agent-tools .btn svg{width:18px;height:18px}
+    .agent-shortcut{color:var(--faint);font-size:10px;white-space:nowrap}
+    .agent-composer .agent-send{min-height:36px;margin-left:auto;padding-inline:12px;border-radius:11px;font-size:13px}
+    .agent-composer .agent-send svg{width:16px;height:16px}
+    @media(max-width:740px){.agent-shortcut{display:none}}
+    @media(pointer:coarse){.agent-composer .agent-tools .btn{width:44px;min-width:44px;min-height:44px;height:44px}}
+    .area-box{position:absolute;border:1px dashed #426780;background:rgba(66,103,128,.1);pointer-events:none;z-index:6}
+    @media(pointer:coarse){.focus .btn,.focus-top .tabset button,.focus-drawing .drawing-select,.focus-sheet .tree-drawing,.focus-sheet .tree-level,.focus-sheet .tree-device,.focus-sheet .section-head .btn,.focus-sheet .review-tabs button,.focus-sheet .filters button,.outline-project button,.focus .zoom button,.focus .canvas-metrics button{min-height:44px}.focus .zoom button,.focus-sheet .section-head .btn{min-width:44px}.focus .canvas-metrics{min-height:50px}}
+    @media(max-width:1000px){.focus-save{display:none}.focus-drawing{width:230px;max-width:230px}}
+    @media(max-width:900px){.focus-sheet{bottom:150px}.focus .canvas-footer{bottom:84px}}
+    @media(max-width:740px){.focus-top{left:10px;right:10px;top:10px;gap:6px;padding-left:9px}.focus-top .brand span{display:none}.focus-top .brand{padding-right:8px}.focus-project{display:none}.focus-drawing{max-width:min(42vw,250px)}.focus-top .tabset{display:none}.focus-top .btn.quiet{display:none}.focus-rail{bottom:10px}.focus-rail [data-action=assistant]{display:grid}.focus-sheet{top:88px;right:10px}.focus .canvas-footer{left:10px;right:10px}.focus .canvas-metrics span:nth-of-type(3),.focus .canvas-metrics .metric-divider:nth-of-type(4){display:none}}
+    @media(max-width:520px){.focus-rail{max-width:calc(100vw - 20px);overflow-x:auto;scrollbar-width:thin}}
+  </style>
+  <link rel="stylesheet" href="gridpilot-visual.css?v=20261020h" />
+</head>
+<body>
+  <div id="stage"></div>
+  <div id="print-project" aria-hidden="true"></div>
+  <script src="reference-project.js"></script>
+  <script src="assets/equipment-icons.js"></script>
+  <script>
+    const longName = 'HIMALIA 1 ENERGY STORAGE (300 MW / 2,400 MWh BESS) - SINGLE-LINE DIAGRAM';
+    const rawGroups = [
+      ['230 kV POI / Plant', 'SCE Lugo 230 kV (Bus 24085)|Utility Disconnect (Proposed)|CAISO Revenue CT (Proposed)|CAISO Revenue VT (Proposed)|POI Interconnection Breaker (Proposed)|POI 230 kV|Plant Substation Main Disconnect|Plant 230 kV Main Breaker|Plant 230 kV Bus|230 kV Surge Arrester|MPT 1 HV Breaker (Proposed)|MPT 1 (230/MV kV, Rating TBD)|MPT 2 HV Breaker (Proposed)|MPT 2 (230/MV kV, Rating TBD)|MPT 3 HV Breaker (Proposed)|MPT 3 (230/MV kV, Rating TBD)'],
+      ['34.5 kV Collector (Conceptual)', 'Block 1 MV Incomer Breaker|Block 1 MV Bus|Feeder F1 Breaker (Typ)|Unit Xfmr 1 (MV/LV, Qty TBD)|Aux Feeder 1 Breaker|Aux Xfmr 1 (MV/480 V)|Block 2 MV Incomer Breaker|Block 2 MV Bus|Feeder F2 Breaker (Typ)|Unit Xfmr 2 (MV/LV, Qty TBD)|Aux Feeder 2 Breaker|Aux Xfmr 2 (MV/480 V)|Block 3 MV Incomer Breaker|Block 3 MV Bus|Feeder F3 Breaker (Typ)|Unit Xfmr 3 (MV/LV, Qty TBD)|Aux Feeder 3 Breaker|Aux Xfmr 3 (MV/480 V)'],
+      ['0.69 kV PCS AC', 'PCS AC Breaker 1 (Typ)|800 MWh BESS Group 1|PCS AC Breaker 2 (Typ)|800 MWh BESS Group 2|PCS AC Breaker 3 (Typ)|800 MWh BESS Group 3'],
+      ['0.48 kV Auxiliary', 'Block 1 Aux|Block 2 Aux|Block 3 Aux']
+    ];
+    const classify = n => /BESS/.test(n) ? 'battery' : /Xfmr|MPT \d \(/.test(n) ? 'transformer' : /Breaker/.test(n) ? 'breaker' : /Bus/.test(n) ? 'bus' : /Disconnect/.test(n) ? 'disconnect' : 'junction';
+    const node = (id,name,type,x,y) => ({id,name,type,x,y,mw:'',mva:'',voltageKv:138,rotation:0,spare:false,notes:''});
+    const data = {drawings:[
+      {id:'sld1',name:'SLD 1',substation:'Substation 1',basis:false,groups:[{name:'138 kV',nodes:[node('gen1','GEN1','generator',220,390),node('bc1','BC1','coupler',475,240),node('pv1','PV1','solar',720,390)]}],edges:[]},
+      {id:'himalia',name:longName,substation:'HIMALIA 1 Plant Substation',basis:true,groups:rawGroups.map(([name,list],gi)=>({name,nodes:list.split('|').map((n,i)=>node(`h-${gi}-${i}`,n,classify(n),170+gi*190,115+i*18))})),edges:[]}
+    ]};
+    if(window.OPENSLD_REFERENCE){
+      const source=window.OPENSLD_REFERENCE, target=data.drawings[1];
+      const sourceName=new Map(source.equipment.map(item=>[item.id,item.name]));
+      const localId=new Map(target.groups.flatMap(group=>group.nodes).map(item=>[item.name,item.id]));
+      target.edges=source.connections.map(connection=>[localId.get(sourceName.get(connection.from.equipmentId)),localId.get(sourceName.get(connection.to.equipmentId)),{fromPort:connection.from.portId,toPort:connection.to.portId}]).filter(edge=>edge[0]&&edge[1]);
+      target.planningBasis=source.planningBasis;
+      target.substations=source.substations;
+      target.sourceConnections=source.connections;
+    }
+    const state = {page:'editor',projectId:'caiso',drawing:'sld1',mode:'edit',review:'issues',filter:'all',selected:null,selectedIds:[],selectedEdge:null,palette:false,assistantMode:'ask',panel:null,menu:null,menuPos:null,tool:'select',grid:false,snap:true,rulers:false,drawingStyle:'reference',zoom:100,panX:0,panY:0,autoPanRestore:null,overview:true,level:0,collapsed:{},search:'',projectSearch:'',paletteSearch:'',draft:'',messages:[],toast:'',connectFrom:null,connectFromPort:null,placeType:null,placeLabel:'',shortcutOpen:false,basisView:false,basisSection:'Drawing basis',basisQuery:'',attachments:[],agentArea:false,history:[],future:[]};
+    const projectsData=[{id:'caiso',name:'CAISO test',drawings:data.drawings}];
+    try{const saved=JSON.parse(localStorage.getItem('opensld-focus-projects-v1'));if(saved?.projects?.length){projectsData.splice(0,projectsData.length,...saved.projects);state.projectId=projectsData.some(p=>p.id===saved.projectId)?saved.projectId:projectsData[0].id;data.drawings=projectsData.find(p=>p.id===state.projectId).drawings;state.drawing=data.drawings[0]?.id||'sld1';}}catch{}
+    if(window.OPENSLD_REFERENCE){
+      for(const p of projectsData)for(const d of p.drawings)if(d.id==='himalia'&&!d.referenceEnriched){
+        const source=window.OPENSLD_REFERENCE,byName=new Map(source.equipment.map(e=>[e.name,e]));
+        const xs=source.equipment.map(e=>e.x),ys=source.equipment.map(e=>e.y),minX=Math.min(...xs),maxX=Math.max(...xs),minY=Math.min(...ys),maxY=Math.max(...ys);
+        d.groups.forEach(g=>{const level=source.voltageLevels.find(v=>v.name===g.name);if(level)Object.assign(g,{id:level.id,nominalKv:level.nominalKv,substationId:level.substationId});g.nodes.forEach(n=>{const e=byName.get(n.name);if(e)Object.assign(n,{type:({busbar:'bus',solar_pv:'solar',battery_storage:'battery',transformer_2w:'transformer'})[e.type]||e.type,x:55+(e.x-minX)*880/(maxX-minX),y:70+(e.y-minY)*460/(maxY-minY),voltageKv:e.voltageKv??g.nominalKv,mw:e.ratedMw??'',mva:e.ratedMva??'',notes:e.notes||'',sourceEquipment:e});});});
+        d.referenceEnriched=true;
+      }
+    }
+    const project=()=>projectsData.find(p=>p.id===state.projectId)||projectsData[0];
+    const projectName=()=>project().name;
+    const library = [
+      ['Buses',[['Busbar section','bus'],['Bus','bus'],['Junction','junction']]],
+      ['Switchgear',[['Breaker','breaker'],['Disconnector','disconnect'],['Load-break switch','disconnect'],['Fuse','fuse'],['Coupler','coupler']]],
+      ['Machines',[['Generator','generator'],['Generator collection','generator_collection'],['Solar PV · AC interface','solar'],['Battery storage · AC interface','battery'],['Load','load']]],
+      ['Branches',[['Two-winding transformer','transformer'],['Three-winding transformer','transformer_3w'],['Line','line'],['Cable','cable'],['To distribution bus','distribution_terminal'],['To transmission line','transmission_terminal']]],
+      ['Shunts',[['Shunt capacitor','shunt_capacitor'],['Shunt reactor','shunt_reactor'],['Surge arrester','surge_arrester'],['CCVT','ccvt'],['Neutral grounding resistor','grounding_resistor'],['Ground','ground']]],
+      ['Grouping',[['Voltage level','voltage_level']]]
+    ];
+    const openSldType = {bus:'busbar',solar:'solar_pv',battery:'battery_storage',transformer:'transformer_2w',line:'line',cable:'cable'};
+    const localType = {busbar:'bus',solar_pv:'solar',battery_storage:'battery',transformer_2w:'transformer'};
+    function parseOpenSld(doc,fileName){
+      if(!doc||!Array.isArray(doc.substations)||!Array.isArray(doc.voltageLevels)||!Array.isArray(doc.equipment)||!Array.isArray(doc.connections))throw Error('This is not an OpenSLD drawing JSON file.');
+      if(doc.equipment.length>5000)throw Error('This drawing is too large for the local prototype.');
+      const ids=new Set(doc.equipment.map(e=>e.id));
+      if(ids.size!==doc.equipment.length||doc.connections.some(c=>!ids.has(c.from?.equipmentId)||!ids.has(c.to?.equipmentId)))throw Error('The drawing contains duplicate IDs or invalid connections.');
+      const xs=doc.equipment.map(e=>Number(e.x)||0),ys=doc.equipment.map(e=>Number(e.y)||0);
+      const minX=Math.min(0,...xs),minY=Math.min(0,...ys),maxX=Math.max(1000,...xs),maxY=Math.max(620,...ys);
+      const scale=Math.min(860/(maxX-minX),500/(maxY-minY));
+      const sourceLayout={minX,minY,scale};
+      const substations=doc.substations.length?structuredClone(doc.substations):[{id:'S1',name:'Substation 1'}];
+      const groups=(doc.voltageLevels.length?doc.voltageLevels:[{id:'VL1',name:'138 kV',substationId:substations[0].id,nominalKv:138}]).map(v=>({id:v.id,name:v.name,nominalKv:v.nominalKv,substationId:v.substationId,nodes:[]}));
+      for(const e of doc.equipment){
+        const n=node(e.id,e.name||e.type||'Equipment',localType[e.type]||e.type,70+((Number(e.x)||0)-minX)*scale,60+((Number(e.y)||0)-minY)*scale);
+        Object.assign(n,{mw:e.ratedMw??'',mva:e.ratedMva??'',voltageKv:e.voltageKv??138,rotation:e.rotation??0,spare:!!e.spare,notes:e.notes||'',sourceEquipment:structuredClone(e)});
+        (groups.find(g=>g.id===e.voltageLevelId)||groups[0]).nodes.push(n);
+      }
+      const name=fileName.replace(/\.opensld\.json$|\.json$/i,'').replace(/[-_]+/g,' ').trim()||'Imported drawing';
+      return {id:'import-'+Date.now(),name,substation:substations[0].name,substations,groups,edges:doc.connections.map(c=>[c.from.equipmentId,c.to.equipmentId,{fromPort:c.from.portId||'a',toPort:c.to.portId||'a'}]),sourceConnections:structuredClone(doc.connections),sourceLayout,planningBasis:doc.planningBasis||null,basis:!!doc.planningBasis,imported:true};
+    }
+    function exportOpenSld(d){
+      const substations=d.substations||[{id:'S1',name:d.substation||'Substation 1'}];
+      const voltageLevels=d.groups.map((g,i)=>({id:g.id||`VL${i+1}`,name:g.name,substationId:g.substationId||substations[0].id,nominalKv:g.nominalKv||parseFloat(g.name)||138}));
+      const equipment=d.groups.flatMap((g,i)=>g.nodes.map(n=>{
+        const raw={...(n.sourceEquipment||{})};
+        const x=d.sourceLayout?d.sourceLayout.minX+(n.x-70)/d.sourceLayout.scale:n.x;
+        const y=d.sourceLayout?d.sourceLayout.minY+(n.y-60)/d.sourceLayout.scale:n.y;
+        const out={...raw,id:n.id,name:n.name,type:openSldType[n.type]||n.type,substationId:g.substationId||substations[0].id,voltageLevelId:g.id||`VL${i+1}`,voltageKv:Number(n.voltageKv)||voltageLevels[i].nominalKv,rotation:Number(n.rotation)||0,x:Math.round(x*100)/100,y:Math.round(y*100)/100};
+        if(n.mw!==''&&n.mw!=null)out.ratedMw=Number(n.mw);else delete out.ratedMw;
+        if(n.mva!==''&&n.mva!=null)out.ratedMva=Number(n.mva);else delete out.ratedMva;
+        if(n.notes)out.notes=n.notes;else delete out.notes;
+        if(n.spare)out.spare=true;else delete out.spare;
+        return out;
+      }));
+      const connections=d.edges.map(([a,b,ports],i)=>d.sourceConnections?.find(c=>c.from.equipmentId===a&&c.to.equipmentId===b&&(!ports||c.from.portId===ports.fromPort&&c.to.portId===ports.toPort))||{id:`connection-${i+1}`,from:{equipmentId:a,portId:ports?.fromPort||'a'},to:{equipmentId:b,portId:ports?.toPort||'a'}});
+      return {version:1,substations,voltageLevels,equipment,connections,...(d.planningBasis?{planningBasis:d.planningBasis}:{})};
+    }
+    function recordUndo(){state.history.push({id:state.drawing,drawing:structuredClone(drawing())});if(state.history.length>50)state.history.shift();state.future=[];}
+    function undo(){const entry=state.history.pop();if(!entry)return;state.future.push({id:state.drawing,drawing:structuredClone(drawing())});const index=data.drawings.findIndex(d=>d.id===entry.id);if(index>=0){data.drawings[index]=entry.drawing;state.drawing=entry.id;}state.selected=null;state.selectedEdge=null;refresh();}
+    function redo(){const entry=state.future.pop();if(!entry)return;state.history.push({id:state.drawing,drawing:structuredClone(drawing())});const index=data.drawings.findIndex(d=>d.id===entry.id);if(index>=0){data.drawings[index]=entry.drawing;state.drawing=entry.id;}state.selected=null;state.selectedEdge=null;refresh();}
+    const esc = x => String(x ?? '').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+    const drawing = () => data.drawings.find(d=>d.id===state.drawing) || data.drawings[0];
+    const nodes = () => drawing().groups.flatMap(g=>g.nodes);
+    const selected = () => nodes().find(n=>n.id===state.selected);
+    const activeMode = () => state.mode==='deliver'?'edit':state.mode;
+    function findings(){
+      if(drawing().id==='himalia'){
+        const out=[],byId=new Map(nodes().map(n=>[n.id,n]));
+        for(let i=1;i<=3;i++){
+          const mpt=`h-0-${11+(i-1)*2}`,unit=`h-1-${3+(i-1)*6}`,bess=`h-2-${1+(i-1)*2}`,aux=`h-1-${5+(i-1)*6}`,load=`h-3-${i-1}`;
+          if(byId.has(mpt)&&!(Number(byId.get(mpt).mva)>0))out.push({kind:'warning',text:`MPT ${i} (230/MV kV, Rating TBD) has no transformer MVA rating.`,id:mpt});
+          if(byId.has(unit)&&!(Number(byId.get(unit).mva)>0))out.push({kind:'warning',text:`Unit Xfmr ${i} (MV/LV, Qty TBD) has no transformer MVA rating.`,id:unit});
+          if(byId.has(bess)&&!(Number(byId.get(bess).mw)>0)&&!(Number(byId.get(bess).mva)>0))out.push({kind:'warning',text:`800 MWh BESS Group ${i} has no aggregate AC MW or MVA rating.`,id:bess});
+          const downstream=id=>drawing().edges.filter(([a])=>a===id).some(([,b])=>['breaker','fuse'].includes(byId.get(b)?.type));
+          if(byId.has(aux)&&!downstream(aux))out.push({kind:'warning',text:`Aux Xfmr ${i} (MV/480 V) lv: no breaker or fuse is shown before the next bus/equipment boundary.`,id:aux});
+          if(byId.has(load)&&!downstream(load))out.push({kind:'warning',text:`Block ${i} Aux a: no breaker or fuse is shown before the next bus/equipment boundary.`,id:load});
+        }
+        return out;
+      }
+      const linked=id=>drawing().edges.some(e=>e.includes(id));
+      const out=nodes().filter(n=>!linked(n.id)).map(n=>({kind:'blocking',text:`${n.name} is not connected by valid terminals.`,id:n.id}));
+      const pv=nodes().find(n=>n.type==='solar');
+      if(pv&&!linked(pv.id))out.push({kind:'warning',text:`${pv.name} terminal a is unconnected.`,id:pv.id});
+      if(pv&&!pv.mw&&!pv.mva)out.push({kind:'warning',text:`${pv.name} has no aggregate AC MW or MVA rating. No inverter/PCS count, DC rating or storage duration is inferred.`,id:pv.id});
+      return out;
+    }
+    const counts=()=>({blocking:findings().filter(f=>f.kind==='blocking').length,warning:findings().filter(f=>f.kind==='warning').length});
+    const btn=(text,action,cls='',attrs='')=>`<button type="button" class="btn ${cls}" data-action="${action}" ${attrs}>${text}</button>`;
+    const logo=()=>`<span class="brand"><svg width="30" height="33" viewBox="0 0 31 34" aria-hidden="true"><path fill="#0e1318" d="M15.5 0 30 8.5v17L15.5 34 1 25.5v-17z"/><path fill="#fff" d="M17 4 9 19h6l-2 11 10-17h-6l4-9z"/></svg><span>OpenSLD</span></span>`;
+    const icon=name=>{
+      const paths={
+        outline:'<rect x="3.5" y="4" width="6" height="16" rx="1.5"/><path d="M13 6h7M13 12h7M13 18h7"/>',
+        add:'<rect x="3.5" y="3.5" width="17" height="17" rx="4"/><path d="M12 7.5v9M7.5 12h9"/>',
+        select:'<path d="M4.037 4.688a.495.495 0 0 1 .651-.651l16 6.5a.5.5 0 0 1-.063.947l-6.124 1.58a2 2 0 0 0-1.438 1.435l-1.579 6.126a.5.5 0 0 1-.947.063z"/>',
+        pan:'<path d="M18 11V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2"/><path d="M14 10V4a2 2 0 0 0-2-2 2 2 0 0 0-2 2v2"/><path d="M10 10.5V6a2 2 0 0 0-2-2 2 2 0 0 0-2 2v8"/><path d="M18 8a2 2 0 1 1 4 0v6a8 8 0 0 1-8 8h-2c-2.8 0-4.5-.86-5.99-2.34l-3.6-3.6a2 2 0 0 1 2.83-2.82L7 15"/>',
+        connect:'<path d="M17 19a1 1 0 0 1-1-1v-2a2 2 0 0 1 2-2h2a2 2 0 0 1 2 2v2a1 1 0 0 1-1 1z"/><path d="M17 21v-2"/><path d="M19 14V6.5a1 1 0 0 0-7 0v11a1 1 0 0 1-7 0V10"/><path d="M21 21v-2"/><path d="M3 5V3"/><path d="M4 10a2 2 0 0 1-2-2V6a1 1 0 0 1 1-1h4a1 1 0 0 1 1 1v2a2 2 0 0 1-2 2z"/><path d="M7 5V3"/>',
+        area:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/><path d="M7 12h10"/>',
+        properties:'<path d="M4 6h16M4 12h16M4 18h16"/><circle cx="9" cy="6" r="2" fill="white"/><circle cx="16" cy="12" r="2" fill="white"/><circle cx="11" cy="18" r="2" fill="white"/>',
+        review:'<path d="M12 2.8 19.5 6v5.6c0 4.6-3 7.7-7.5 9.6-4.5-1.9-7.5-5-7.5-9.6V6L12 2.8Z"/><path d="m8.7 11.9 2.1 2.1 4.6-4.7"/>',
+        view:'<rect x="3.5" y="3.5" width="7" height="7" rx="1"/><rect x="13.5" y="3.5" width="7" height="7" rx="1"/><rect x="3.5" y="13.5" width="7" height="7" rx="1"/><rect x="13.5" y="13.5" width="7" height="7" rx="1"/>',
+        assistant:'<path d="m12 2.5 1.9 6.6L20.5 11l-6.6 1.9L12 19.5l-1.9-6.6L3.5 11l6.6-1.9L12 2.5ZM19 17.5l.7 2.3 2.3.7-2.3.7-.7 2.3-.7-2.3-2.3-.7 2.3-.7.7-2.3Z"/>',
+        paperclip:'<path d="m16 6-8.414 8.586a2 2 0 0 0 2.829 2.829l8.414-8.586a4 4 0 1 0-5.657-5.657l-8.379 8.551a6 6 0 1 0 8.485 8.485l8.379-8.551"/>',
+        scan:'<path d="M3 7V5a2 2 0 0 1 2-2h2"/><path d="M17 3h2a2 2 0 0 1 2 2v2"/><path d="M21 17v2a2 2 0 0 1-2 2h-2"/><path d="M7 21H5a2 2 0 0 1-2-2v-2"/>',
+        'chat-export':'<path d="M12 15V3"/><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><path d="m7 10 5 5 5-5"/>',
+        send:'<path d="M14.536 21.686a.5.5 0 0 0 .937-.024l6.5-19a.496.496 0 0 0-.635-.635l-19 6.5a.5.5 0 0 0-.024.937l7.93 3.18a2 2 0 0 1 1.112 1.11z"/><path d="m21.854 2.147-10.94 10.939"/>',
+        upload:'<path d="M12 16V4m0 0-4 4m4-4 4 4M4 16v4h16v-4"/>',
+        undo:'<path d="M8 7 4 11l4 4M4 11h10a5 5 0 0 1 0 10"/>',
+        redo:'<path d="m16 7 4 4-4 4m4-4H10a5 5 0 0 0 0 10"/>',
+        layout:'<rect width="18" height="7" x="3" y="3" rx="1"/><rect width="9" height="7" x="3" y="14" rx="1"/><rect width="5" height="7" x="16" y="14" rx="1"/>',
+        download:'<path d="M12 3v12m0 0-4-4m4 4 4-4M4 17v3h16v-3"/>',
+        chevron:'<path d="m6 9 6 6 6-6"/>',
+        more:'<circle cx="5" cy="12" r="1" fill="currentColor"/><circle cx="12" cy="12" r="1" fill="currentColor"/><circle cx="19" cy="12" r="1" fill="currentColor"/>',
+        close:'<path d="M5 5l14 14M19 5 5 19"/>',
+        fit:'<path d="M8 3H3v5M16 3h5v5M3 16v5h5M21 16v5h-5"/>'
+      };
+      const strokeWidth=['select','pan','connect','area','layout','paperclip','scan','chat-export','send'].includes(name)?2:1.7;
+      return `<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="${strokeWidth}" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${paths[name]}</svg>`;
+    };
+    const equipmentIcon=name=>{
+      const svg=window.OpenSldEquipmentIcons[name];
+      if(!svg)throw Error(`Missing equipment icon: ${name}`);
+      return svg;
+    };
+    const pickerDrawing=cls=>`<label class="sr" for="drawing-${cls}">Current drawing</label><span class="drawing-picker"><select class="drawing-select" id="drawing-${cls}" data-field="drawing">${data.drawings.map(d=>`<option value="${esc(d.id)}" ${d.id===state.drawing?'selected':''}>${esc(d.name)}</option>`).join('')}</select><span class="drawing-chevron" aria-hidden="true">${icon('chevron')}</span></span>`;
+    const modeTabs=()=>`<div class="tabset" role="tablist" aria-label="Drawing mode"><button type="button" role="tab" data-action="mode-edit" aria-selected="${activeMode()==='edit'}">Edit</button><button type="button" role="tab" data-action="mode-review" aria-selected="${activeMode()==='review'}">Review <span class="count">${findings().length}</span></button></div>`;
+    const quickActions=()=>`<div class="focus-quick" role="group" aria-label="Drawing actions">${btn(`${icon('upload')} Import`,'import-file','', 'aria-label="Import OpenSLD drawing"')}${btn('Planning basis','planning-basis','quiet')}${btn(icon('undo'),'undo','quiet icon',`aria-label="Undo" ${state.history.length?'':'disabled'}`)}${btn(icon('redo'),'redo','quiet icon',`aria-label="Redo" ${state.future.length?'':'disabled'}`)}${btn(icon('layout'),'auto-layout','quiet icon','aria-label="Auto-layout and fit drawing"')}${drawing().id==='himalia'?btn(state.overview?'Full SLD':'Overview','toggle-overview','quiet'):''}${btn('?','shortcuts','quiet icon','aria-label="Keyboard shortcuts"')}</div><input id="import-file" type="file" accept="application/json,.json" hidden>`;
+    function tree(withDrawings=true){
+      const stations=drawing().substations||[{id:'S1',name:drawing().substation}];
+      const level=(g,i)=>`<button type="button" class="tree-level" data-action="collapse-level" data-index="${i}" aria-expanded="${!state.collapsed[i]}"><span>${state.collapsed[i]?'▸':'▾'}</span><span class="truncate" title="${esc(g.name)}">${esc(g.name)}</span><span class="tree-count">${g.nodes.length}</span></button>${state.collapsed[i]?'':g.nodes.map(n=>`<button type="button" class="tree-device" data-action="select-node" data-id="${esc(n.id)}" data-label="${esc(n.name.toLowerCase())}" aria-current="${n.id===state.selected}"><span class="node-mark ${['generator','solar','battery'].includes(n.type)?'round':''}" aria-hidden="true"></span><span class="truncate" title="${esc(n.name)}">${esc(n.name)}</span></button>`).join('')}`;
+      const stationTree=stations.map((s,si)=>`<div class="tree-root">⌄ &nbsp;${esc(s.name)}</div>${drawing().groups.map((g,i)=>({g,i})).filter(({g})=>(g.substationId||stations[0].id)===s.id).map(({g,i})=>level(g,i)).join('')}`).join('');
+      return `<div class="tree-wrap">${withDrawings?`<div class="section-head"><span class="label">Drawings</span>${btn('+','new-drawing','quiet icon','aria-label="New drawing"')}</div>${data.drawings.map(d=>`<button type="button" class="tree-drawing" data-action="drawing" data-id="${esc(d.id)}" aria-current="${d.id===state.drawing}"><span aria-hidden="true">▤</span><span class="truncate" title="${esc(d.name)}">${esc(d.name)}</span><span class="tree-count">${d.groups.reduce((a,g)=>a+g.nodes.length,0)}</span></button>`).join('')}<div style="height:14px"></div>`:''}<div class="section-head"><span class="label">Network</span><div>${btn('+ Station','add-substation','quiet','aria-label="Add substation"')}${btn('+ Level','add-level','quiet','aria-label="Add voltage level"')}</div></div>${stationTree}</div>`;
+    }
+    const voltageColor=kv=>Number(kv)>=200?'#416a95':Number(kv)>=100?'#347c82':Number(kv)>=30?'#9b7039':'#805c92';
+    const twoEndedTypes=new Set(['coupler','breaker','disconnect','disconnector','fuse','transformer','transformer_3w','line','cable']);
+    function terminalIds(n){
+      const defaults=n.type==='transformer'||n.type==='transformer_3w'?['hv','lv']:n.type==='bus'?['w','e']:n.type==='junction'?['n1','n2','n3','n4']:twoEndedTypes.has(n.type)?['a','b']:['a'];
+      const used=[...(drawing().sourceConnections||[]).flatMap(c=>[c.from,c.to]).filter(port=>port.equipmentId===n.id).map(port=>port.portId),...drawing().edges.flatMap(([a,b,ports])=>[a===n.id?ports?.fromPort:null,b===n.id?ports?.toPort:null])].filter(Boolean);
+      return [...new Set([...defaults,...used])];
+    }
+    function terminalPosition(n,port){
+      const distance=nodes().length>25?14:47;
+      let dx=0,dy=-distance;
+      if(port==='b'||port==='lv')dy=distance;
+      else if(port==='w'){dx=-distance;dy=0;}
+      else if(port==='e'){dx=distance;dy=0;}
+      else if(/^n\d+$/.test(port)){dx=(Number(port.slice(1))-2)*12;dy=-distance;}
+      else if(/^s\d+$/.test(port)){dx=(Number(port.slice(1))-2)*12;dy=distance;}
+      const angle=(Number(n.rotation)||0)*Math.PI/180;
+      return {x:n.x+dx*Math.cos(angle)-dy*Math.sin(angle),y:n.y+dx*Math.sin(angle)+dy*Math.cos(angle)};
+    }
+    function orthogonalPath(from,to){
+      const midY=(from.y+to.y)/2;
+      return `M${from.x} ${from.y}V${midY}H${to.x}V${to.y}`;
+    }
+    function connectionPorts(){
+      if(state.tool!=='connect')return '';
+      const compact=nodes().length>25;
+      return nodes().flatMap(n=>terminalIds(n).map(port=>{
+        const at=terminalPosition(n,port),active=state.connectFrom===n.id&&state.connectFromPort===port;
+        return `<g class="connection-port${active?' active':''}" data-action="connect-port" data-id="${esc(n.id)}" data-port="${esc(port)}" role="button" tabindex="0" aria-label="${active?'Selected start terminal':'Connect'} ${esc(n.name)} terminal ${esc(port)}" aria-pressed="${active}" transform="translate(${at.x} ${at.y})"><circle class="port-hit" r="${compact?9:18}"/><circle class="port-ring" r="${compact?3.8:5.5}"/></g>`;
+      })).join('');
+    }
+    function glyph(n){
+      const {x,y}=n;let shape='';
+      if(nodes().length>25)return `<g data-action="select-node" data-id="${esc(n.id)}" class="${state.selectedIds.includes(n.id)?'selected':''}" role="button" tabindex="0" aria-label="Select ${esc(n.name)}" transform="translate(${x} ${y})" style="--voltage-ink:${voltageColor(n.voltageKv)}"><rect class="hit" x="-11" y="-12" width="80" height="25" rx="3" fill="transparent" stroke="transparent"/><rect x="-6" y="-6" width="12" height="12" fill="white" stroke="currentColor" stroke-width="1.5"/><text x="10" y="3" font-size="9" font-weight="600">${esc(n.name.length>13?n.name.slice(0,12)+'…':n.name)}</text><title>${esc(n.name)}</title></g>`;
+      if(n.type==='generator')shape='<circle r="30" fill="white" stroke="#111" stroke-width="3"/><path d="M-18 1Q-9-16 0 1T18 1" fill="none" stroke="#111" stroke-width="3"/>';
+      else if(n.type==='solar')shape='<rect x="-31" y="-33" width="62" height="66" fill="white" stroke="#111" stroke-width="3"/><path d="M-21-12h42M-21-3h42M-21 8h42M-12-15l-4 27M1-15l-4 27M14-15l-4 27" stroke="#111" stroke-width="2"/>';
+      else if(n.type==='coupler'||n.type==='breaker')shape='<path d="M0-34v16M0 18v16" stroke="#111" stroke-width="3"/><rect x="-15" y="-17" width="30" height="34" fill="white" stroke="#111" stroke-width="3"/>';
+      else shape='<rect x="-23" y="-23" width="46" height="46" fill="white" stroke="#111" stroke-width="3"/><path d="M-13 0h26" stroke="#111" stroke-width="2"/>';
+      return `<g data-action="select-node" data-id="${esc(n.id)}" class="${state.selectedIds.includes(n.id)?'selected':''}" role="button" tabindex="0" aria-label="Select ${esc(n.name)}" transform="translate(${x} ${y})" style="--voltage-ink:${voltageColor(n.voltageKv)}"><rect class="hit" x="-44" y="-45" width="185" height="92" rx="9" fill="transparent" stroke="transparent"/><g transform="rotate(${Number(n.rotation)||0})">${shape}<path d="M0-47v13${twoEndedTypes.has(n.type)?'M0 34v13':''}" stroke="#111" stroke-width="2"/></g><text x="47" y="-2" font-size="19" font-weight="600" text-decoration="underline">${esc(n.name)}</text><text x="47" y="19" font-size="15">${esc(n.voltageKv||138)} kV</text></g>`;
+    }
+    function svg(){
+      if(drawing().id==='himalia'&&state.overview)return `<svg class="sld-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" role="img" aria-label="HIMALIA drawing overview"><text x="54" y="63" font-size="14" letter-spacing="2">HIMALIA 1 PLANT SUBSTATION</text><text x="55" y="130" font-size="15" font-weight="650">230 kV POI / Plant</text><path d="M55 146H950M380 146v110M625 146v110M830 146v110" fill="none" stroke="#111" stroke-width="3"/><rect x="75" y="175" width="190" height="60" rx="6" fill="white" stroke="#111" stroke-width="2"/><text x="90" y="198" font-size="12">POI Interconnection</text><text x="90" y="218" font-size="12">Breaker (Proposed)</text>${[0,1,2].map((_,i)=>`<rect x="${295+i*240}" y="256" width="170" height="64" rx="6" fill="white" stroke="#111" stroke-width="2"/><text x="${310+i*240}" y="281" font-size="13" font-weight="650">MPT ${i+1}</text><text x="${310+i*240}" y="300" font-size="11">230/MV kV · rating TBD</text><path d="M${380+i*240} 320v69" stroke="#111" stroke-width="3"/>`).join('')}<text x="55" y="380" font-size="15" font-weight="650">34.5 kV Collector · conceptual</text><path d="M55 390H950" stroke="#111" stroke-width="3"/>${[0,1,2].map((_,i)=>`<path d="M${380+i*240} 390v68" stroke="#111" stroke-width="3"/><rect x="${295+i*240}" y="460" width="170" height="82" rx="7" fill="#faf7f1" stroke="#9c7c4c"/><text x="${310+i*240}" y="490" font-size="13" font-weight="650">800 MWh BESS</text><text x="${310+i*240}" y="513" font-size="12">Group ${i+1} · PCS AC</text>`).join('')}<text x="55" y="578" font-size="12">43 devices · 4 voltage levels</text></svg>`;
+      const coords=new Map(nodes().map(n=>[n.id,n]));
+      const lines=drawing().edges.map(([a,b,ports],i)=>{
+        const p=coords.get(a),q=coords.get(b);if(!p||!q)return '';
+        const tag=ports?'path':'line',geometry=ports?`d="${orthogonalPath(terminalPosition(p,ports.fromPort),terminalPosition(q,ports.toPort))}"`:`x1="${p.x}" y1="${p.y}" x2="${q.x}" y2="${q.y}"`;
+        return `<g class="connection-edge${state.selectedEdge===i?' selected':''}" data-action="select-edge" data-index="${i}" role="button" tabindex="0" aria-label="Select connection from ${esc(p.name)} to ${esc(q.name)}"><${tag} ${geometry} fill="none" stroke="${state.selectedEdge===i?'#426780':'#111'}" stroke-width="${nodes().length>25?1.5:3}"/><${tag} class="edge-hit" ${geometry} fill="none" stroke="transparent" stroke-width="${nodes().length>25?7:16}"/></g>`;
+      }).join('');
+      return `<svg class="sld-svg" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 620" role="group" aria-label="${esc(drawing().name)} drawing">${lines}${nodes().map(glyph).join('')}${state.tool==='connect'?`<path class="connection-preview" d=""/>${connectionPorts()}`:''}</svg>`;
+    }
+    function canvas(compact=false){
+      const empty=nodes().length===0;
+      const metrics=compact?`<div class="canvas-metrics"><span><strong class="count">${nodes().length}</strong> equipment</span><span class="metric-divider" aria-hidden="true"></span><span><strong class="count">${drawing().edges.length}</strong> connections</span><span class="metric-divider" aria-hidden="true"></span><button type="button" class="${counts().blocking?'blocking':'warning'}" data-action="panel-review"><i class="finding-dot" aria-hidden="true"></i><strong class="count">${findings().length}</strong> findings</button></div>`:`<div class="canvas-chip"><span class="count">${nodes().length} equipment</span> · <span class="count">${drawing().edges.length} connections</span> · <span class="count">${findings().length} findings</span></div>`;
+      return `<section class="canvas ${state.grid?'surface-grid':''}" data-style="${state.drawingStyle}" aria-label="Drawing canvas">${state.rulers?'<div class="canvas-ruler ruler-x" aria-hidden="true"></div><div class="canvas-ruler ruler-y" aria-hidden="true"></div>':''}<div class="diagram" data-tool="${state.tool}" data-overview="${drawing().id==='himalia'&&state.overview}"><div class="diagram-inner" style="transform:translate(${state.panX}px,${state.panY}px) scale(${state.zoom/100})">${empty?'':svg()}</div></div>${empty?`<div class="empty"><span class="label">Start a one-line</span><h2>Your network, on the canvas.</h2><p>Add equipment and connect its terminals, or describe the drawing for an Agent preview.</p><div class="empty-actions">${btn(`${icon('add')} Add equipment`,'palette','primary')}${btn('Describe drawing','describe-drawing','quiet')}</div>${btn('Import an OpenSLD file','import-file','quiet')}</div>`:''}<div class="canvas-footer">${metrics}<span class="spacer"></span><div class="zoom" role="group" aria-label="Canvas zoom controls" title="Pinch on trackpad to zoom; scroll with two fingers to pan"><button type="button" data-action="zoom-out" aria-label="Zoom out">−</button><span class="count">${Math.round(state.zoom)}%</span><button type="button" data-action="zoom-in" aria-label="Zoom in">+</button><button type="button" data-action="zoom-fit" aria-label="Fit drawing">${icon('fit')}</button></div></div></section>`;
+    }
+    function inspector(){
+      if(state.selectedEdge!==null){
+        const edge=drawing().edges[state.selectedEdge];if(!edge)return '';
+        const from=nodes().find(n=>n.id===edge[0]),to=nodes().find(n=>n.id===edge[1]);
+        return `<span class="label">CONNECTION</span><h3 style="font-size:20px;margin:8px 0 20px">${esc(from?.name||edge[0])} → ${esc(to?.name||edge[1])}</h3><div class="field"><label>From terminal</label><input value="${esc(from?.name||edge[0])} · ${esc(edge[2]?.fromPort||'a')}" readonly></div><div class="field"><label>To terminal</label><input value="${esc(to?.name||edge[1])} · ${esc(edge[2]?.toPort||'a')}" readonly></div>${btn('Delete connection','delete-edge','quiet','style="color:var(--red)"')}`;
+      }
+      const n=selected();
+      if(!n)return `<div class="inspector-empty"><div class="symbol" aria-hidden="true">⌖</div><h3>Details, in context.</h3><p>Select equipment or a connection to inspect and edit it.</p></div><div class="note">Shift + click to select more equipment. Drag on empty canvas to select an area.</div>`;
+      const connected=drawing().edges.filter(e=>e.includes(n.id)).map(e=>nodes().find(x=>x.id===(e[0]===n.id?e[1]:e[0]))?.name||'Equipment');
+      const numberField=(key,label,value)=>`<div class="field"><label for="node-${key}">${label}</label><input id="node-${key}" type="number" step="any" data-field="${key}" value="${esc(value??'')}" placeholder="Not specified"></div>`;
+      return `<span class="label">${state.selectedIds.length>1?`${state.selectedIds.length} SELECTED`:n.type.replaceAll('_',' ')}</span><h3 style="font-size:20px;letter-spacing:-.03em;overflow-wrap:break-word;margin:6px 0 12px">${esc(n.name)}</h3><div class="inspector-actions">${btn('Duplicate','duplicate-node','quiet')}${btn('Rotate 90°','rotate-node','quiet')}${btn('Connected bay','select-bay','quiet')}${btn('Delete','delete-node','quiet','style="color:var(--red)"')}</div><div class="field"><label for="node-name">Name</label><input id="node-name" data-field="name" value="${esc(n.name)}"></div><div class="field"><label for="node-level">Voltage level</label><select id="node-level" data-field="level">${drawing().groups.map((g,i)=>`<option value="${i}" ${g.nodes.includes(n)?'selected':''}>${esc(g.name)}</option>`).join('')}</select></div><div class="label inspector-section">Electrical</div>${numberField('voltageKv','Nominal voltage · kV',n.voltageKv)}${numberField('mw','Rated MW',n.mw)}${numberField('mva','Rated MVA',n.mva)}${['breaker','coupler','disconnect'].includes(n.type)?`<div class="field"><label for="node-status">Switching state</label><select id="node-status" data-field="status">${['unspecified','open','closed'].map(s=>`<option value="${s}" ${n.status===s?'selected':''}>${s}</option>`).join('')}</select></div>`:''}<label class="checkline"><input type="checkbox" data-field="spare" ${n.spare?'checked':''}> Spare equipment</label><div class="label inspector-section">Position & size</div><div class="position-grid">${numberField('x','X',Math.round(n.x))}${numberField('y','Y',Math.round(n.y))}</div><div class="field"><label for="node-rotation">Rotation</label><select id="node-rotation" data-field="rotation">${[0,90,180,270].map(r=>`<option value="${r}" ${Number(n.rotation)===r?'selected':''}>${r}°</option>`).join('')}</select></div><div class="label inspector-section">Terminals & connections</div><div class="note">${connected.length?connected.map(esc).join(' · '):'Unconnected'}</div>${btn('Connect terminal','connect-terminal','quiet','style="margin:10px 0 16px"')}<div class="field"><label for="node-notes">Notes</label><textarea id="node-notes" data-field="notes" placeholder="Add engineering context">${esc(n.notes)}</textarea></div><div class="note" style="margin-top:12px">ID · ${esc(n.id)}</div><div class="label inspector-section">Live findings</div><div class="note">${esc(findings().find(f=>f.id===n.id)?.text||'No current live finding for this equipment.')}</div>`;
+    }
+    function review(){
+      const tabs=`<div class="review-tabs" role="tablist" aria-label="Review sections"><button type="button" role="tab" data-action="review-issues" aria-selected="${state.review==='issues'}">Live checks</button><button type="button" role="tab" data-action="review-engineering" aria-selected="${state.review==='engineering'}">Engineering</button><button type="button" role="tab" data-action="review-basis" aria-selected="${state.review==='basis'}">Planning basis</button></div>`;
+      if(state.review==='basis')return tabs+(drawing().planningBasis?.report?`<div class="note">Historical source record. Later drawing edits are not recalculated here.</div><div class="basis-section"><h3>Planning basis</h3><p>Open the retained report for this drawing, including source inputs and unresolved values.</p></div>${btn('Open planning basis','planning-basis','primary','style="width:100%;margin-top:16px"')}`:`<div class="inspector-empty"><div class="symbol" aria-hidden="true">▤</div><h3>No planning basis recorded</h3><p>This drawing may have been created manually or imported without a retained report.</p></div>`);
+      if(state.review==='engineering')return `${tabs}<div class="note">Engineering review is advisory. It does not establish utility acceptance or construction approval.</div><div class="basis-section"><h3>${drawing().id==='sld1'?'No electrical connections':'Ratings remain unresolved'}</h3><p>${drawing().id==='sld1'?'Confirm the intended source, bus and feeder paths.':'MPT, unit-transformer and BESS AC ratings remain unverified.'}</p></div><div class="basis-section"><h3>Source-branch protection</h3><p>Confirm protective schemes and identify protection outside the drawing boundary.</p></div>${btn('Run engineering review','run-review','primary','style="width:100%;margin-top:18px"')}`;
+      const c=counts(),items=findings().filter(f=>state.filter==='all'||f.kind===state.filter);
+      return `${tabs}<div style="display:flex;gap:7px"><span class="pill red count">${c.blocking} blocking</span><span class="pill amber count">${c.warning} warnings</span></div><div class="filters" role="group" aria-label="Filter findings">${['all','blocking','warning'].map(f=>`<button type="button" data-action="filter-${f}" aria-pressed="${state.filter===f}">${f==='all'?'All':f==='warning'?'Warnings':'Blocking'}</button>`).join('')}</div><div class="issues">${items.length?items.map(f=>`<button type="button" class="issue ${f.kind==='warning'?'warning':''}" data-action="select-issue" data-id="${esc(f.id)}" aria-current="${state.selected===f.id}"><span class="sev">● ${f.kind}</span><span class="copy">${esc(f.text)}</span></button>`).join(''):'<div class="note">No findings in this filter.</div>'}</div>${btn('Run engineering review','run-review','primary','style="width:100%;margin-top:16px"')}`;
+    }
+    function equipmentLibrary(){
+      return `<label class="sr" for="equipment-search">Find equipment</label><input class="search" id="equipment-search" type="search" data-field="palette-search" placeholder="Find equipment" value="${esc(state.paletteSearch)}" autocomplete="off"><div class="field"><label for="placement-level">Place equipment in</label><select id="placement-level" data-field="active-level">${drawing().groups.map((g,i)=>`<option value="${i}" ${i===Number(state.level)?'selected':''}>${esc(drawing().substation)} · ${esc(g.name)}</option>`).join('')}</select></div>${state.placeType?`<div class="note" style="margin-bottom:14px">Place ${esc(state.placeLabel)}: click or drop on the canvas. ${btn('Cancel','cancel-place','quiet')}</div>`:''}${library.map(([label,items])=>`<section><h3 class="label">${label}</h3><div class="palette-grid">${items.map(([name,type])=>`<button type="button" draggable="true" data-action="add-node" data-type="${type}" data-label="${esc(name.toLowerCase())}" data-name="${esc(name)}" aria-pressed="${state.placeType===type}"><span class="glyph" aria-hidden="true">${equipmentIcon(name)}</span><span class="palette-name">${esc(name)}</span><span class="palette-add" aria-hidden="true">+</span></button>`).join('')}</div></section>`).join('')}<div class="note palette-empty" hidden>No matching equipment. Try a different name.</div><p class="muted" style="font-size:12px">Click a symbol, then click the canvas. Drag equipment to place it directly.</p>`;
+    }
+    function focusSheet(){
+      if(!state.panel)return '';
+      const titles={outline:'Drawings & network',equipment:'Equipment',properties:'Properties',review:'Live rules',assistant:'Agent'};
+      const body=state.panel==='outline'?`<div class="outline-project"><span class="label">PROJECT</span><button type="button" data-action="projects">${esc(projectName())}</button></div><label class="sr" for="focus-search">Find in drawing</label><input class="search" id="focus-search" type="search" data-field="tree-search" placeholder="Find in drawing" value="${esc(state.search)}">${tree()}`:state.panel==='equipment'?equipmentLibrary():state.panel==='properties'?inspector():state.panel==='review'?review():assistantBody();
+      return `<aside class="panel focus-sheet" aria-label="${titles[state.panel]}"><div class="panel-head"><h2>${titles[state.panel]}</h2>${btn(icon('close'),'close-panel','quiet icon','aria-label="Close panel"')}</div><div class="panel-body">${body}</div>${state.panel==='assistant'?assistantForm():''}</aside>`;
+    }
+    function focus(){
+      const railButton=(name,action,label,pressed)=>`<button type="button" data-action="${action}" data-tip="${label}" title="${label}" aria-label="${label}" ${pressed===undefined?'':`aria-pressed="${pressed}"`}>${icon(name)}</button>`;
+      if(state.basisView)return `<div class="app focus">${basisPage()}${overlays()}</div>`;
+      return `<div class="app focus">${canvas(true)}<header class="focus-top">${logo()}<button type="button" class="focus-project" data-action="projects" aria-label="Open projects"><strong>${esc(projectName())}</strong></button><div class="focus-drawing"><span class="label">DRAWING</span>${pickerDrawing('focus')}</div>${btn(icon('more'),'menu-drawing','quiet icon','aria-label="Drawing actions"')}<span class="spacer"></span><span class="focus-save"><i class="save-dot" aria-hidden="true"></i>Saved locally</span>${modeTabs()}${btn(`${icon('assistant')} Assistant`,'assistant','quiet')}${btn(`${icon('download')} Export ${icon('chevron')}`,'menu-project','primary')}</header>${quickActions()}<nav class="focus-rail" aria-label="Canvas tools">${railButton('outline','panel-outline','Open outline',state.panel==='outline')}${railButton('add','palette','Add equipment')}<span class="rail-divider" aria-hidden="true"></span>${railButton('select','tool-select','Select',state.tool==='select')}${railButton('pan','tool-pan','Pan',state.tool==='pan')}${railButton('connect','tool-connect','Connect devices',state.tool==='connect')}${railButton('area','tool-area','Select area for Agent',state.tool==='area')}<span class="rail-divider" aria-hidden="true"></span>${railButton('properties','panel-properties','Open properties',state.panel==='properties')}${railButton('review','panel-review','Open review',state.panel==='review')}${railButton('view','menu-view','Canvas view')}${railButton('assistant','assistant','Assistant')}</nav>${focusSheet()}${overlays()}</div>`;
+    }
+    const basisTitles=['PRELIMINARY DRAWING BASIS','DRAWING BRIEF — FACTS, ASSUMPTIONS AND UNRESOLVED VALUES','FOLLOW-UP QUESTIONS — AFTER DRAFT','PROFESSIONAL SLD PLANNING — US FOUNDATION','SOURCE-TRACEABLE INPUTS','POWER PATH AND DESIGN DECISIONS','STUDY READINESS — NOT CALCULATION RESULTS','SOURCES'];
+    function basisPage(){
+      const report=drawing().planningBasis?.report||'';
+      const parts=basisTitles.map((title,index)=>{const start=report.indexOf(title),end=report.indexOf(basisTitles[index+1],start+title.length);return {title,body:start<0?'':report.slice(start+title.length,end<0?undefined:end).trim()};}).filter(part=>part.body);
+      const query=state.basisQuery.trim().toLowerCase(), visible=parts.filter(part=>!query||`${part.title} ${part.body}`.toLowerCase().includes(query));
+      return `<header class="focus-top">${logo()}<button type="button" class="focus-project" data-action="projects"><strong>${esc(projectName())}</strong></button><div class="focus-drawing"><span class="label">DRAWING</span>${pickerDrawing('basis')}</div><span class="spacer"></span>${btn('← Drawing','drawing-view','primary')}</header><main class="basis-page"><div class="basis-page-header"><span class="label">PLANNING BASIS</span><h1>${esc(drawing().name)}</h1><p>Retained source report · later edits to the drawing do not update this record.</p><label class="sr" for="basis-search">Search planning basis</label><input class="search" id="basis-search" type="search" data-field="basis-search" placeholder="Search this report" value="${esc(state.basisQuery)}"></div>${report?visible.map(part=>`<section class="basis-report-section"><h2>${esc(part.title)}</h2><p>${esc(part.body)}</p></section>`).join('')||'<p class="muted">No matching sections.</p>':'<div class="inspector-empty"><h3>No planning basis recorded</h3><p>This drawing has no retained report.</p></div>'}</main>`;
+    }
+    function assistantBody(){return `<div class="note" style="margin-bottom:16px">Local Agent preview · ask, describe changes, or audit the active drawing. Generated edits require the OpenSLD service.</div>${state.messages.length?state.messages.map(m=>`<div class="message ${m.by==='user'?'user':''}"><small>${m.by==='user'?'You':'Local preview'}</small>${esc(m.text)}</div>`).join(''):`<div class="message"><small>Drawing context</small>${esc(drawing().name)} · ${nodes().length} equipment · ${drawing().edges.length} connections · ${findings().length} live findings.</div>`}`;}
+    function assistantForm(){
+      const placeholder=state.assistantMode==='ask'?'Ask about a device or finding':state.assistantMode==='draw'?'Describe the drawing change':'Describe what to audit';
+      return `<div class="drawer-foot agent-footer"><div class="tabset" role="tablist" aria-label="Assistant task"><button type="button" role="tab" data-action="assistant-ask" aria-selected="${state.assistantMode==='ask'}">Ask</button><button type="button" role="tab" data-action="assistant-draw" aria-selected="${state.assistantMode==='draw'}">Draw</button><button type="button" role="tab" data-action="assistant-audit" aria-selected="${state.assistantMode==='audit'}">Audit</button></div>${state.attachments.length?`<div class="note" style="margin-bottom:8px">Attached: ${state.attachments.map(esc).join(' · ')}</div>`:''}<form id="assistant-form" class="agent-composer"><label class="sr" for="assistant-input">Message</label><textarea id="assistant-input" data-field="draft" rows="3" placeholder="${placeholder}">${esc(state.draft)}</textarea><div class="agent-composer-actions"><div class="agent-tools" role="group" aria-label="Agent message tools">${btn(icon('paperclip'),'attach-agent','quiet icon','aria-label="Attach files" title="Attach files"')}${btn(icon('scan'),'select-area','quiet icon','aria-label="Select drawing area" title="Select drawing area"')}${btn(icon('chat-export'),'export-chat','quiet icon','aria-label="Export chat" title="Export chat"')}</div><span class="agent-shortcut" aria-hidden="true">⌘ / Ctrl + Enter</span><span class="spacer"></span>${btn(`Send ${icon('send')}`,'send','primary agent-send')}</div></form><input id="agent-files" type="file" multiple hidden accept=".pdf,.png,.jpg,.jpeg,.json,.txt,.md"></div>`;
+    }
+    function overlays(){
+      const menuStyle=state.menuPos?`style="left:${state.menuPos.x}px;top:${state.menuPos.y}px;right:auto"`:'';
+      const menu=state.menu==='project'?`<div class="menu" role="menu" ${menuStyle}><div class="menu-title">Whole project</div><button type="button" role="menuitem" data-action="export-pdf">Project PDF · all drawings</button><button type="button" role="menuitem" data-action="export-pdf">Print project PDF</button><hr><div class="menu-title">Current drawing</div><button type="button" role="menuitem" data-action="export-json">OpenSLD JSON</button><button type="button" role="menuitem" data-action="export-svg">SVG</button><button type="button" role="menuitem" data-action="export-png">PNG</button></div>`:
+        state.menu==='drawing'?`<div class="menu" role="menu" ${menuStyle}><div class="menu-title">Drawing actions</div><button type="button" role="menuitem" data-action="new-drawing">New drawing</button><button type="button" role="menuitem" data-action="rename-drawing">Rename drawing</button><button type="button" role="menuitem" data-action="duplicate-drawing">Duplicate drawing</button><hr><button type="button" role="menuitem" data-action="delete-drawing" style="color:var(--red)">Delete drawing</button></div>`:
+        state.menu==='view'?`<div class="menu view-menu" role="menu" ${menuStyle}><div class="menu-title">Drawing style</div><button type="button" role="menuitemradio" aria-checked="${state.drawingStyle==='reference'}" data-action="style-reference">${state.drawingStyle==='reference'?'✓ ':''}Reference · black ink</button><button type="button" role="menuitemradio" aria-checked="${state.drawingStyle==='voltage'}" data-action="style-voltage">${state.drawingStyle==='voltage'?'✓ ':''}Voltage colors</button><div class="menu-title">Canvas</div><button type="button" role="menuitemcheckbox" aria-checked="${state.snap}" data-action="toggle-snap">${state.snap?'✓ ':''}Snap to grid</button><button type="button" role="menuitemcheckbox" aria-checked="${state.grid}" data-action="toggle-grid">${state.grid?'✓ ':''}Show grid</button><button type="button" role="menuitemcheckbox" aria-checked="${state.rulers}" data-action="toggle-rulers">${state.rulers?'✓ ':''}Show rulers</button><button type="button" role="menuitem" data-action="auto-layout">Auto-layout and fit</button><button type="button" role="menuitem" data-action="zoom-fit">Fit drawing</button><hr><button type="button" role="menuitem" data-action="planning-basis">Planning basis</button><button type="button" role="menuitem" data-action="shortcuts">Keyboard shortcuts</button></div>`:'';
+      const palette=state.palette?`<div class="shade" data-action="close-overlay"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Equipment library"><div class="drawer-head"><h2>Equipment library</h2>${btn(icon('close'),'close-overlay','quiet icon','aria-label="Close library"')}</div><div class="drawer-body"><p class="muted" style="font-size:13px;margin:0 0 13px">Place in ${esc(drawing().groups[Number(state.level)]?.name||'the active voltage level')}</p><label class="sr" for="palette-search">Search equipment</label><input class="search" id="palette-search" type="search" data-field="palette-search" placeholder="Find equipment" value="${esc(state.paletteSearch)}" autocomplete="off" spellcheck="false">${library.map(([label,items])=>`<section><h3 class="label">${label}</h3><div class="palette-grid">${items.map(([name,type])=>`<button type="button" data-action="add-node" data-type="${type}" data-label="${esc(name.toLowerCase())}" data-name="${esc(name)}"><span class="glyph" aria-hidden="true">${equipmentIcon(name)}</span><span class="palette-name">${esc(name)}</span><span class="palette-add" aria-hidden="true">+</span></button>`).join('')}</div></section>`).join('')}<div class="note palette-empty" hidden>No matching equipment. Try a different name.</div></div></aside>`:'';
+      const shortcuts=state.shortcutOpen?`<div class="shade" data-action="close-shortcuts"></div><section class="shortcut-dialog" role="dialog" aria-modal="true" aria-labelledby="shortcuts-title"><div class="drawer-head"><h2 id="shortcuts-title">Keyboard shortcuts</h2>${btn(icon('close'),'close-shortcuts','quiet icon','aria-label="Close keyboard shortcuts"')}</div><div class="shortcut-list">${[['Select / pan / connect','V / H / C'],['Temporary pan','Space + drag'],['Fit drawing','F'],['Rotate selection','R'],['Nudge selection','Arrow keys'],['Nudge five steps','Shift + arrows'],['Select all equipment','⌘ / Ctrl A'],['Duplicate selection','⌘ / Ctrl D'],['Delete selection','Delete / Backspace'],['Undo / redo','⌘ / Ctrl Z / Shift Z'],['Save project','⌘ / Ctrl S'],['Print project PDF','⌘ / Ctrl P'],['Equipment / properties rail','[ / ]'],['Cancel selection or tool','Esc'],['Send Agent message','⌘ / Ctrl Enter'],['Show shortcuts','?']].map(([name,key])=>`<div><span>${name}</span><kbd>${key}</kbd></div>`).join('')}<p class="muted">Click terminals to connect. Shift-click selects more equipment. Double-click equipment to center it.</p></div></section>`:'';
+      return menu+palette+shortcuts+(state.toast?`<div class="toast" role="status">${esc(state.toast)}</div>`:'');
+    }
+    function projects(){const list=projectsData.filter(p=>p.name.toLowerCase().includes(state.projectSearch.toLowerCase()));return `<div class="app project-home"><header class="bar">${logo()}<span class="spacer"></span>${btn('Return to drawing','open-project')}</header><main class="project-main"><span class="label">SB Energy workspace</span><h1>Projects</h1><p>Select a project to continue working on its drawings.</p><div class="project-controls"><label class="sr" for="project-search">Find projects</label><input id="project-search" class="search" type="search" data-field="project-search" placeholder="Find projects" value="${esc(state.projectSearch)}">${btn('+ New project','new-project','primary')}</div><div class="project-grid">${list.map(p=>`<div class="project-card"><button type="button" class="project-open" data-action="open-project" data-id="${esc(p.id)}"><span class="pill draft">Engineering draft</span><h2>${esc(p.name)}</h2><span class="muted count">${p.drawings.length} drawings · ${p.drawings.reduce((sum,d)=>sum+d.groups.reduce((n,g)=>n+g.nodes.length,0),0)} equipment</span></button><div class="project-operations">${btn('Rename','rename-project','quiet',`data-id="${esc(p.id)}"`)}${btn('Duplicate','duplicate-project','quiet',`data-id="${esc(p.id)}"`)}${btn('Delete','delete-project','quiet',`data-id="${esc(p.id)}"`)}</div></div>`).join('')||'<p class="muted">No matching projects.</p>'}</div></main></div>`;}
+    const stage = document.getElementById('stage');
+    let lastConnectPointer=null;
+    const persist=()=>{try{localStorage.setItem('opensld-focus-projects-v1',JSON.stringify({projects:projectsData,projectId:state.projectId}));}catch{}};
+    const refresh = () => { stage.innerHTML = state.page === 'projects' ? projects() : focus();persist(); };
+    refresh();
+    let modalOpener='';
+    function restoreModalFocus(){const action=modalOpener;modalOpener='';if(action)stage.querySelector(`[data-action="${action}"]`)?.focus();}
+    function toast(message){state.toast=message;refresh();clearTimeout(toast.timer);toast.timer=setTimeout(()=>{state.toast='';stage.querySelector('.toast')?.remove();},3300);}
+    function chooseDrawing(id){if(!data.drawings.some(d=>d.id===id))return;state.drawing=id;state.mode='edit';state.review='issues';state.filter='all';state.selected=null;state.selectedIds=[];state.selectedEdge=null;state.tool='select';state.connectFrom=null;state.connectFromPort=null;state.level=0;state.collapsed={};state.panX=0;state.panY=0;state.autoPanRestore=null;state.zoom=100;state.overview=id==='himalia';state.panel=null;state.history=[];state.future=[];refresh();}
+    function fileName(){return drawing().name.replace(/[^a-z0-9-_]+/gi,'-').slice(0,65).replace(/-+$/,'')||'drawing';}
+    function download(name,content,type){const blob=new Blob([content],{type});const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;a.click();setTimeout(()=>URL.revokeObjectURL(url),1000);}
+    function svgText(){const el=stage.querySelector('.sld-svg');if(!el)return '';const clean=el.cloneNode(true);clean.querySelectorAll('.connection-port,.connection-preview,.edge-hit').forEach(item=>item.remove());return new XMLSerializer().serializeToString(clean);}
+    function exportPng(){const text=svgText();if(!text){toast('This drawing is empty.');return;}const blob=new Blob([text],{type:'image/svg+xml'}),url=URL.createObjectURL(blob),image=new Image();image.onload=()=>{const c=document.createElement('canvas');c.width=1800;c.height=1116;const ctx=c.getContext('2d');ctx.fillStyle='#fff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(image,0,0,c.width,c.height);c.toBlob(b=>{if(!b)return;const p=URL.createObjectURL(b),a=document.createElement('a');a.href=p;a.download=fileName()+'.png';a.click();setTimeout(()=>URL.revokeObjectURL(p),1000);},'image/png');URL.revokeObjectURL(url);};image.src=url;}
+    function revealSelectedNode(n){
+      if(!n||drawing().id==='himalia'&&state.overview)return;
+      const w=stage.clientWidth||innerWidth,h=stage.clientHeight||innerHeight,scale=Math.min(w/1000,h/620)*state.zoom/100;
+      const origin=(w-1000*scale)/2,right=w-Math.min(370,w-98)-44;
+      const leftEdge=origin+(n.x-45)*scale+state.panX,rightEdge=origin+(n.x+155)*scale+state.panX;
+      if(leftEdge<82){if(state.autoPanRestore===null)state.autoPanRestore=state.panX;state.panX+=82-leftEdge;}
+      else if(rightEdge>right){if(state.autoPanRestore===null)state.autoPanRestore=state.panX;state.panX-=rightEdge-right;}
+    }
+    function restoreAutoPan(){if(state.autoPanRestore!==null){state.panX=state.autoPanRestore;state.autoPanRestore=null;}}
+    function applyCanvasTransform(){
+      const inner=stage.querySelector('.diagram-inner'),label=stage.querySelector('.zoom .count');
+      if(inner)inner.style.transform=`translate(${state.panX}px,${state.panY}px) scale(${state.zoom/100})`;
+      if(label)label.textContent=`${Math.round(state.zoom)}%`;
+      if(state.tool==='connect'&&lastConnectPointer){const {x,y}=lastConnectPointer;updateConnectionPreview({clientX:x,clientY:y,target:document.elementFromPoint(x,y)});}
+    }
+    function zoomAt(clientX,clientY,next){
+      const diagram=stage.querySelector('.diagram');
+      if(!diagram)return;
+      const rect=diagram.getBoundingClientRect(),zoom=Math.min(300,Math.max(40,next)),ratio=zoom/state.zoom;
+      const x=clientX-rect.left-rect.width/2,y=clientY-rect.top-rect.height/2;
+      state.panX=x*(1-ratio)+state.panX*ratio;
+      state.panY=y*(1-ratio)+state.panY*ratio;
+      state.zoom=zoom;
+      state.autoPanRestore=null;
+      applyCanvasTransform();
+    }
+    function placeAt(clientX,clientY,type=state.placeType,label=state.placeLabel){
+      if(!type)return;
+      if(type==='voltage_level'){const name=prompt('Voltage level name','69 kV');if(name?.trim()){recordUndo();drawing().groups.push({name:name.trim(),nodes:[]});state.level=drawing().groups.length-1;}state.placeType=null;state.tool='select';refresh();return;}
+      const rect=stage.querySelector('.diagram')?.getBoundingClientRect();if(!rect)return;
+      const scale=Math.min(rect.width/1000,rect.height/620)*state.zoom/100;
+      let x=500+(clientX-rect.left-rect.width/2-state.panX)/scale;
+      let y=310+(clientY-rect.top-rect.height/2-state.panY)/scale;
+      x=Math.max(45,Math.min(900,state.snap?Math.round(x/20)*20:x));
+      y=Math.max(45,Math.min(570,state.snap?Math.round(y/20)*20:y));
+      const all=nodes(),prefix={generator:'GEN',generator_collection:'GEN',solar:'PV',breaker:'BRK',battery:'BESS',transformer:'TX',transformer_3w:'TX',bus:'BUS',coupler:'BC',load:'LOAD'}[type]||'EQ';
+      const name=prefix+(all.filter(n=>n.type===type).length+1),g=drawing().groups[Number(state.level)]||drawing().groups[0];
+      recordUndo();const n=node(`${type}-${crypto.randomUUID().slice(0,8)}`,name,type,x,y);n.voltageKv=g.nominalKv||parseFloat(g.name)||138;g.nodes.push(n);if(drawing().id==='himalia')state.overview=false;
+      state.selected=n.id;state.selectedIds=[n.id];state.selectedEdge=null;state.placeType=null;state.placeLabel='';state.tool='select';state.panel='properties';refresh();
+    }
+    function connectPort(id,port){
+      const target=nodes().find(n=>n.id===id);if(!target||!terminalIds(target).includes(port))return;
+      if(!state.connectFrom||state.connectFrom===id){
+        const same=state.connectFrom===id&&state.connectFromPort===port;
+        state.connectFrom=same?null:id;state.connectFromPort=same?null:port;refresh();return;
+      }
+      const from=state.connectFrom,fromPort=state.connectFromPort;
+      const exists=drawing().edges.some(([a,b,ports])=>a===from&&b===id&&(ports?.fromPort||'a')===fromPort&&(ports?.toPort||'a')===port||a===id&&b===from&&(ports?.fromPort||'a')===port&&(ports?.toPort||'a')===fromPort);
+      if(exists){toast('These terminals are already connected.');return;}
+      recordUndo();drawing().edges.push([from,id,{fromPort,toPort:port}]);
+      state.connectFrom=null;state.connectFromPort=null;state.selectedEdge=null;
+      toast('Connection added.');
+    }
+    function updateConnectionPreview(event){
+      const path=stage.querySelector('.connection-preview');if(!path)return;
+      const source=nodes().find(n=>n.id===state.connectFrom),svg=path.ownerSVGElement;
+      if(!source||!event.target?.closest('.diagram')||!svg?.getScreenCTM()){lastConnectPointer=null;path.setAttribute('d','');return;}
+      lastConnectPointer={x:event.clientX,y:event.clientY};
+      const terminal=event.target.closest('[data-action="connect-port"]');
+      const target=terminal&&terminal.dataset.id!==source.id?nodes().find(n=>n.id===terminal.dataset.id):null;
+      const end=target?terminalPosition(target,terminal.dataset.port):new DOMPoint(event.clientX,event.clientY).matrixTransform(svg.getScreenCTM().inverse());
+      path.setAttribute('d',orthogonalPath(terminalPosition(source,state.connectFromPort),end));
+    }
+    function act(el,event){
+      const action=el.dataset.action,id=el.dataset.id;
+      if(action==='import-file'){stage.querySelector('#import-file')?.click();return;}
+      if(action==='undo'){undo();return;}
+      if(action==='redo'){redo();return;}
+      if(action==='auto-layout'){
+        if(nodes().length){recordUndo();const all=nodes(),columns=Math.min(7,Math.ceil(Math.sqrt(all.length*1.5))),rows=Math.ceil(all.length/columns);all.forEach((n,i)=>{n.x=110+(i%columns)*(780/Math.max(1,columns-1));n.y=100+Math.floor(i/columns)*(420/Math.max(1,rows-1));});}
+        state.zoom=100;state.panX=0;state.panY=0;state.menu=null;state.overview=false;refresh();return;
+      }
+      if(action==='toggle-overview'){state.overview=!state.overview;if(state.overview){state.tool='select';state.connectFrom=null;state.connectFromPort=null;lastConnectPointer=null;}refresh();return;}
+      if(action==='style-reference'||action==='style-voltage'){state.drawingStyle=action.slice(6);state.menu=null;refresh();return;}
+      if(action==='toggle-snap'){state.snap=!state.snap;state.menu=null;refresh();return;}
+      if(action==='toggle-rulers'){state.rulers=!state.rulers;state.menu=null;refresh();return;}
+      if(action==='shortcuts'){state.shortcutOpen=true;state.menu=null;refresh();stage.querySelector('[data-action="close-shortcuts"]')?.focus();return;}
+      if(action==='close-shortcuts'){state.shortcutOpen=false;refresh();return;}
+      if(action==='planning-basis'){state.basisView=true;state.menu=null;state.panel=null;refresh();return;}
+      if(action==='drawing-view'){state.basisView=false;refresh();return;}
+      if(action==='projects'){state.page='projects';state.menu=null;refresh();return;}
+      if(action==='open-project'){const next=projectsData.find(p=>p.id===id)||project();state.projectId=next.id;data.drawings=next.drawings;state.page='editor';state.basisView=false;chooseDrawing(next.drawings[0].id);return;}
+      if(action==='new-project'){
+        const name=prompt('Project name','Untitled project');if(!name?.trim())return;
+        const id=`project-${Date.now()}`,initial={id:`drawing-${Date.now()}`,name:'SLD 1',substation:'Substation 1',basis:false,groups:[{id:'VL1',name:'138 kV',nominalKv:138,nodes:[]}],edges:[]};
+        projectsData.push({id,name:name.trim(),drawings:[initial]});state.projectId=id;data.drawings=projectsData.at(-1).drawings;state.page='editor';chooseDrawing(initial.id);toast('Project created locally.');return;
+      }
+      if(action==='rename-project'){const p=projectsData.find(p=>p.id===id);if(!p)return;const name=prompt('Rename project',p.name);if(name?.trim())p.name=name.trim();refresh();return;}
+      if(action==='duplicate-project'){const p=projectsData.find(p=>p.id===id);if(!p)return;const copy=structuredClone(p);copy.id=`project-${Date.now()}`;copy.name+=' copy';copy.drawings.forEach(d=>{d.id=`drawing-${crypto.randomUUID()}`;});projectsData.push(copy);refresh();return;}
+      if(action==='delete-project'){const p=projectsData.find(p=>p.id===id);if(!p||projectsData.length===1)return;if(confirm(`Delete ${p.name} from this local prototype?`)){projectsData.splice(projectsData.indexOf(p),1);if(state.projectId===id){state.projectId=projectsData[0].id;data.drawings=projectsData[0].drawings;state.drawing=data.drawings[0].id;}refresh();}return;}
+      if(action==='drawing'){chooseDrawing(id);return;}
+      if(action==='new-drawing'){if(data.drawings.length>=20){toast('A project can contain up to 20 drawings.');return;}const n=data.drawings.length+1,d={id:'new-'+Date.now(),name:`Untitled SLD ${n}`,substation:'Substation 1',basis:false,groups:[{name:'138 kV',nodes:[]}],edges:[]};data.drawings.push(d);state.menu=null;chooseDrawing(d.id);toast('Drawing added.');return;}
+      if(action==='collapse-level'){state.collapsed[el.dataset.index]=!state.collapsed[el.dataset.index];refresh();return;}
+      if(action==='add-substation'){const name=prompt('Substation name','New substation');if(name?.trim()){recordUndo();drawing().substations||=[{id:'S1',name:drawing().substation}];drawing().substations.push({id:`station-${crypto.randomUUID().slice(0,8)}`,name:name.trim()});toast('Substation added.');}return;}
+      if(action==='add-level'){const name=prompt('Voltage level name','69 kV');if(name?.trim()){recordUndo();const stations=drawing().substations||[{id:'S1',name:drawing().substation}],stationId=drawing().groups[state.level]?.substationId||stations[0].id;drawing().groups.push({id:`level-${crypto.randomUUID().slice(0,8)}`,name:name.trim(),nominalKv:parseFloat(name)||138,substationId:stationId,nodes:[]});state.level=drawing().groups.length-1;toast('Voltage level added.');}return;}
+      if(action==='connect-port'){connectPort(id,el.dataset.port);return;}
+      if(action==='select-node'){
+        if(drawing().id==='himalia'&&state.overview)state.overview=false;
+        if(state.tool==='connect'){const n=nodes().find(item=>item.id===id);if(n)connectPort(id,terminalIds(n)[0]);return;}
+        if(event?.shiftKey){state.selectedIds=state.selectedIds.includes(id)?state.selectedIds.filter(x=>x!==id):[...state.selectedIds,id];state.selected=state.selectedIds.at(-1)||null;}
+        else{state.selected=id;state.selectedIds=[id];}
+        state.selectedEdge=null;state.panel='properties';revealSelectedNode(selected());refresh();return;
+      }
+      if(action==='select-edge'){state.selectedEdge=Number(el.dataset.index);state.selected=null;state.selectedIds=[];state.panel='properties';refresh();return;}
+      if(action==='select-issue'){state.selected=id;state.selectedIds=[id];state.panel='review';revealSelectedNode(selected());refresh();return;}
+      if(action==='delete-edge'){if(state.selectedEdge===null)return;recordUndo();drawing().edges.splice(state.selectedEdge,1);state.selectedEdge=null;refresh();return;}
+      if(action==='duplicate-node'){
+        const chosen=nodes().filter(n=>state.selectedIds.includes(n.id));if(!chosen.length)return;recordUndo();
+        const map=new Map();for(const n of chosen){const copy=structuredClone(n);copy.id=`copy-${crypto.randomUUID().slice(0,8)}`;copy.name=`${n.name} copy`;copy.x+=40;copy.y+=40;const group=drawing().groups.find(g=>g.nodes.includes(n));group.nodes.push(copy);map.set(n.id,copy.id);}
+        const added=drawing().edges.filter(([a,b])=>map.has(a)&&map.has(b)).map(([a,b,ports])=>ports?[map.get(a),map.get(b),structuredClone(ports)]:[map.get(a),map.get(b)]);drawing().edges.push(...added);
+        state.selectedIds=[...map.values()];state.selected=state.selectedIds.at(-1);refresh();return;
+      }
+      if(action==='rotate-node'){if(!state.selectedIds.length)return;recordUndo();nodes().filter(n=>state.selectedIds.includes(n.id)).forEach(n=>n.rotation=(Number(n.rotation)+90)%360);refresh();return;}
+      if(action==='delete-node'){if(!state.selectedIds.length)return;recordUndo();const ids=new Set(state.selectedIds);drawing().groups.forEach(g=>g.nodes=g.nodes.filter(n=>!ids.has(n.id)));drawing().edges=drawing().edges.filter(([a,b])=>!ids.has(a)&&!ids.has(b));state.selected=null;state.selectedIds=[];refresh();return;}
+      if(action==='select-bay'){
+        if(!state.selected)return;const ids=new Set([state.selected]);let changed=true;while(changed){changed=false;for(const [a,b] of drawing().edges)if(ids.has(a)!==ids.has(b)){ids.add(a);ids.add(b);changed=true;}}
+        state.selectedIds=[...ids];refresh();return;
+      }
+      if(action==='connect-terminal'){if(!state.selected)return;state.tool='connect';state.panel=null;connectPort(state.selected,terminalIds(selected())[0]);return;}
+      if(action.startsWith('mode-')){state.mode=action.split('-')[1];state.menu=null;state.panel=state.mode==='review'?'review':null;if(!state.panel)restoreAutoPan();refresh();return;}
+      if(action.startsWith('review-')){state.review=action.split('-')[1];refresh();return;}
+      if(action.startsWith('filter-')){state.filter=action.split('-')[1];refresh();return;}
+      if(action==='run-review'){state.review='engineering';state.assistantMode='audit';state.panel='assistant';state.messages.push({by:'local',text:`Local audit: ${findings().length} live findings across ${nodes().length} equipment and ${drawing().edges.length} connections. ${findings().slice(0,3).map(f=>f.text).join(' ')}`});refresh();return;}
+      if(action==='palette'){state.panel=state.panel==='equipment'?null:'equipment';state.menu=null;refresh();return;}
+      if(action==='describe-drawing'){state.assistantMode='draw';state.panel='assistant';refresh();stage.querySelector('#assistant-input')?.focus();return;}
+      if(action==='add-node'){state.placeType=el.dataset.type;state.placeLabel=el.dataset.name||el.textContent.trim();state.tool='place';refresh();return;}
+      if(action==='cancel-place'){state.placeType=null;state.placeLabel='';state.tool='select';refresh();return;}
+      if(action==='close-overlay'){state.palette=false;state.menu=null;refresh();restoreModalFocus();return;}
+      if(action==='assistant'){state.panel=state.panel==='assistant'?null:'assistant';refresh();if(state.panel&&!matchMedia('(pointer:coarse)').matches)stage.querySelector('#assistant-input')?.focus();return;}
+      if(['assistant-ask','assistant-draw','assistant-audit'].includes(action)){state.assistantMode=action.split('-')[1];refresh();return;}
+      if(action==='attach-agent'){stage.querySelector('#agent-files')?.click();return;}
+      if(action==='select-area'){state.panel=null;state.tool='area';toast('Drag on the canvas to select an area for Agent context.');return;}
+      if(action==='export-chat'){download('opensld-agent-chat.txt',state.messages.map(m=>`${m.by==='user'?'You':'Local preview'}: ${m.text}`).join('\n\n'),'text/plain');return;}
+      if(action==='send'){
+        const input=stage.querySelector('#assistant-input'),value=(input?.value||state.draft).trim();if(!value&&state.assistantMode!=='audit'){input?.focus();return;}
+        if(value)state.messages.push({by:'user',text:value});
+        const scope=state.selectedIds.length?`${state.selectedIds.length} selected equipment`:`${nodes().length} equipment`;
+        const response=state.assistantMode==='audit'?`Local audit of ${scope}: ${findings().length} findings, ${drawing().edges.length} connections. ${findings().slice(0,4).map(f=>f.text).join(' ')||'No live findings.'}`:state.assistantMode==='ask'?`This drawing has ${nodes().length} equipment, ${drawing().edges.length} connections, and ${findings().length} live findings. Select an item in Review for details.`:'The drawing request is recorded here. Applying a generated edit needs the OpenSLD Agent service.';
+        state.messages.push({by:'local',text:response});state.draft='';refresh();return;
+      }
+      if(action.startsWith('menu-')){
+        const m=action.split('-')[1],opening=state.menu!==m,rect=el.getBoundingClientRect();
+        state.menu=opening?m:null;
+        if(opening){
+          state.menuPos={x:Math.max(8,Math.min(m==='view'?rect.right+8:rect.left,innerWidth-248)),y:m==='view'?Math.max(8,Math.min(rect.top,innerHeight-470)):Math.min(rect.bottom+7,innerHeight-(m==='project'?272:240))};
+          modalOpener=action;
+        }
+        refresh();
+        if(opening)stage.querySelector('.menu [role^=menuitem]')?.focus();
+        else restoreModalFocus();
+        return;
+      }
+      if(action==='rename-drawing'){const name=prompt('Rename drawing',drawing().name);if(name?.trim())drawing().name=name.trim();state.menu=null;refresh();return;}
+      if(action==='duplicate-drawing'){
+        if(data.drawings.length>=20){toast('A project can contain up to 20 drawings.');return;}
+        const copy=structuredClone(drawing()),ids=new Map();copy.id='copy-'+Date.now();copy.name+=' copy';copy.groups.forEach(g=>g.nodes.forEach(n=>{const next=`copy-${crypto.randomUUID().slice(0,8)}`;ids.set(n.id,next);n.id=next;}));copy.edges=copy.edges.map(([a,b,ports])=>ports?[ids.get(a),ids.get(b),ports]:[ids.get(a),ids.get(b)]);delete copy.sourceConnections;data.drawings.push(copy);state.menu=null;chooseDrawing(copy.id);toast('Drawing duplicated locally.');return;
+      }
+      if(action==='delete-drawing'){if(data.drawings.length<2){toast('A project needs at least one drawing.');return;}if(confirm(`Delete ${drawing().name} from this local prototype?`)){data.drawings.splice(data.drawings.findIndex(d=>d.id===state.drawing),1);state.menu=null;chooseDrawing(data.drawings[0].id);toast('Drawing deleted locally.');}return;}
+      if(action==='export-json'){state.menu=null;download(fileName()+'.opensld.json',JSON.stringify(exportOpenSld(drawing()),null,2),'application/json');refresh();return;}
+      if(action==='export-svg'){state.menu=null;const text=svgText();if(text)download(fileName()+'.svg',text,'image/svg+xml');else toast('This drawing is empty.');refresh();return;}
+      if(action==='export-png'){state.menu=null;exportPng();refresh();return;}
+      if(action==='export-pdf'){
+        state.menu=null;
+        const active=state.drawing;
+        document.getElementById('print-project').innerHTML=data.drawings.map(d=>{
+          state.drawing=d.id;
+          return `<section class="print-sheet"><h1>${esc(d.name)}</h1><p>${esc(d.substation)} · ${d.groups.reduce((n,g)=>n+g.nodes.length,0)} equipment</p>${svg()}</section>`;
+        }).join('');
+        state.drawing=active;
+        refresh();
+        window.print();
+        return;
+      }
+      if(action==='toggle-grid'){state.grid=!state.grid;state.menu=null;refresh();return;}
+      if(action.startsWith('tool-')){state.tool=action.split('-')[1];state.connectFrom=null;state.connectFromPort=null;lastConnectPointer=null;if(state.tool==='connect')state.overview=false;refresh();return;}
+      if(action==='zoom-in'||action==='zoom-out'){const rect=stage.querySelector('.diagram')?.getBoundingClientRect();if(rect)zoomAt(rect.left+rect.width/2,rect.top+rect.height/2,state.zoom+(action==='zoom-in'?10:-10));return;}
+      if(action==='zoom-fit'){state.zoom=100;state.panX=0;state.panY=0;state.autoPanRestore=null;state.menu=null;refresh();return;}
+      if(action.startsWith('panel-')){const p=action.split('-')[1];state.panel=state.panel===p?null:p;if(p==='review')state.mode='review';if(!state.panel)restoreAutoPan();refresh();return;}
+      if(action==='close-panel'){state.panel=null;restoreAutoPan();refresh();return;}
+    }
+    let suppressCanvasClick=false;
+    stage.addEventListener('click',e=>{if(suppressCanvasClick){suppressCanvasClick=false;return;}const el=e.target.closest('[data-action]');if(el){e.preventDefault();act(el,e);}else if(state.menu){state.menu=null;refresh();}else if(e.target.closest('.diagram')&&state.tool==='place'){placeAt(e.clientX,e.clientY);}else if(e.target.closest('.diagram')&&state.tool==='select'){state.selected=null;state.selectedIds=[];state.selectedEdge=null;refresh();}});
+    stage.addEventListener('dragstart',e=>{const item=e.target.closest('.palette-grid button[draggable]');if(item)e.dataTransfer.setData('text/plain',JSON.stringify({type:item.dataset.type,name:item.dataset.name}));});
+    stage.addEventListener('dragover',e=>{if(e.target.closest('.diagram'))e.preventDefault();});
+    stage.addEventListener('drop',e=>{if(!e.target.closest('.diagram'))return;e.preventDefault();try{const item=JSON.parse(e.dataTransfer.getData('text/plain'));placeAt(e.clientX,e.clientY,item.type,item.name);}catch{}});
+    stage.addEventListener('submit',e=>{if(e.target.id==='assistant-form'){e.preventDefault();act(e.target.querySelector('[data-action=send]'));}});
+    stage.addEventListener('input',e=>{const f=e.target.dataset.field;if(f==='draft')state.draft=e.target.value;if(['name','notes','mw','mva','voltageKv','x','y'].includes(f)){const n=selected();if(n){if(!e.target.dataset.dirty){recordUndo();e.target.dataset.dirty='1';}n[f]=['voltageKv','x','y'].includes(f)?Number(e.target.value):e.target.value;persist();}return;}if(f==='project-search'){state.projectSearch=e.target.value;const at=e.target.selectionStart;refresh();const input=stage.querySelector('#project-search');input?.focus();input?.setSelectionRange(at,at);return;}if(f==='basis-search'){state.basisQuery=e.target.value;const at=e.target.selectionStart;refresh();const input=stage.querySelector('#basis-search');input?.focus();input?.setSelectionRange(at,at);return;}if(f==='tree-search'||f==='palette-search'){state[f==='tree-search'?'search':'paletteSearch']=e.target.value;const rows=[...stage.querySelectorAll(f==='tree-search'?'.tree-device':'.palette-grid button')];rows.forEach(row=>row.hidden=!row.dataset.label.includes(e.target.value.toLowerCase()));if(f==='palette-search'){const empty=stage.querySelector('.palette-empty');if(empty)empty.hidden=rows.some(row=>!row.hidden);}}});
+    stage.addEventListener('focusout',e=>{if(e.target.dataset.dirty){delete e.target.dataset.dirty;refresh();}});
+    stage.addEventListener('change',async e=>{
+      if(e.target.id==='agent-files'){state.attachments.push(...[...e.target.files].map(file=>file.name));refresh();return;}
+      if(e.target.id==='import-file'){
+        const file=e.target.files?.[0];if(!file)return;
+        if(file.size>20*1024*1024){toast('OpenSLD JSON must be under 20 MB.');return;}
+        try{
+          const imported=parseOpenSld(JSON.parse(await file.text()),file.name);
+          if(data.drawings.length>=20){toast('A project can contain up to 20 drawings.');return;}
+          data.drawings.push(imported);chooseDrawing(imported.id);toast(`Imported ${imported.groups.reduce((n,g)=>n+g.nodes.length,0)} equipment and ${imported.edges.length} connections.`);
+        }catch(error){toast(error instanceof SyntaxError?'The selected file is not valid JSON.':error.message);}
+        return;
+      }
+      const f=e.target.dataset.field;if(f==='drawing'){chooseDrawing(e.target.value);return;}if(f==='active-level'){state.level=Number(e.target.value);return;}
+      const n=selected();if(!n)return;
+      if(f==='level'){const old=drawing().groups.find(g=>g.nodes.includes(n)),next=drawing().groups[Number(e.target.value)];if(old&&next&&old!==next){recordUndo();old.nodes.splice(old.nodes.indexOf(n),1);next.nodes.push(n);}refresh();return;}
+      if(['name','notes','mw','mva','voltageKv','x','y','rotation','status','spare'].includes(f)){
+        if(!e.target.dataset.dirty)recordUndo();n[f]=f==='spare'?e.target.checked:['voltageKv','x','y','rotation'].includes(f)?Number(e.target.value):e.target.value;refresh();
+      }
+    });
+    stage.addEventListener('keydown',e=>{
+      if(e.target.matches('svg [data-action=select-node],svg [data-action=select-edge],svg [data-action=connect-port]')&&['Enter',' '].includes(e.key)){e.preventDefault();const id=e.target.dataset.id,port=e.target.dataset.port;act(e.target);if(port)[...stage.querySelectorAll('.connection-port')].find(item=>item.dataset.id===id&&item.dataset.port===port)?.focus();}
+      if(e.target.id==='assistant-input'&&(e.metaKey||e.ctrlKey)&&e.key==='Enter'){e.preventDefault();act(stage.querySelector('[data-action=send]'));}
+      if(e.key==='Tab'&&e.target.closest('.drawer')){const controls=[...stage.querySelectorAll('.drawer button,.drawer input,.drawer textarea,.drawer select')].filter(x=>!x.disabled&&!x.hidden);const first=controls[0],last=controls.at(-1);if(e.shiftKey&&document.activeElement===first){e.preventDefault();last.focus();}else if(!e.shiftKey&&document.activeElement===last){e.preventDefault();first.focus();}}
+    });
+    let spacePan=false;
+    document.addEventListener('keydown',e=>{
+      if(e.key==='Escape'){
+        if(state.shortcutOpen||state.palette||state.menu||state.panel||state.placeType||state.selected||state.selectedEdge!==null||state.tool!=='select'){e.preventDefault();state.shortcutOpen=false;state.palette=false;state.menu=null;state.panel=null;state.placeType=null;state.connectFrom=null;state.connectFromPort=null;state.selected=null;state.selectedIds=[];state.selectedEdge=null;state.tool='select';restoreAutoPan();refresh();restoreModalFocus();}return;
+      }
+      if(state.page!=='editor'||state.basisView)return;
+      const editing=e.target.closest('input,textarea,select,[contenteditable]');
+      if(editing)return;
+      const modifier=e.metaKey||e.ctrlKey,key=e.key.toLowerCase();
+      if(modifier&&['a','d','z','s','p'].includes(key)){
+        e.preventDefault();
+        if(key==='a'){state.selectedIds=nodes().map(n=>n.id);state.selected=state.selectedIds.at(-1)||null;state.panel='properties';refresh();}
+        if(key==='d')act({dataset:{action:'duplicate-node'}});
+        if(key==='z'){if(e.shiftKey)redo();else undo();}
+        if(key==='s')toast('Project saved locally.');
+        if(key==='p')act({dataset:{action:'export-pdf'}});
+        return;
+      }
+      if(e.key===' '){e.preventDefault();spacePan=true;stage.querySelector('.diagram')?.setAttribute('data-tool','pan');return;}
+      if(['Delete','Backspace'].includes(e.key)){e.preventDefault();act({dataset:{action:state.selectedEdge===null?'delete-node':'delete-edge'}});return;}
+      if(e.key.startsWith('Arrow')&&state.selectedIds.length){e.preventDefault();recordUndo();const delta=e.shiftKey?20:4;for(const n of nodes().filter(n=>state.selectedIds.includes(n.id))){n.x+=e.key==='ArrowLeft'?-delta:e.key==='ArrowRight'?delta:0;n.y+=e.key==='ArrowUp'?-delta:e.key==='ArrowDown'?delta:0;}refresh();return;}
+      const shortcuts={v:'tool-select',h:'tool-pan',c:'tool-connect',f:'zoom-fit',r:'rotate-node','[':'panel-outline',']':'panel-properties','?':'shortcuts'};
+      if(shortcuts[key]){e.preventDefault();act({dataset:{action:shortcuts[key]}});}
+    });
+    document.addEventListener('keyup',e=>{if(e.key===' '){spacePan=false;stage.querySelector('.diagram')?.setAttribute('data-tool',state.tool);}});
+    let panStart=null,areaStart=null,moveStart=null;
+    stage.addEventListener('pointerdown',e=>{
+      const diagram=e.target.closest('.diagram');if(!diagram)return;
+      if(state.tool==='area'||state.tool==='select'&&!spacePan&&!e.target.closest('svg [data-action]')){const rect=diagram.getBoundingClientRect(),box=document.createElement('div');box.className='area-box';box.style.left=`${e.clientX-rect.left}px`;box.style.top=`${e.clientY-rect.top}px`;diagram.append(box);areaStart={x:e.clientX,y:e.clientY,rect,box,agent:state.tool==='area'};e.target.setPointerCapture?.(e.pointerId);return;}
+      const element=state.tool==='select'&&!spacePan?e.target.closest('svg [data-action=select-node]'):null;
+      if(element){const n=nodes().find(item=>item.id===element.dataset.id);if(n){moveStart={x:e.clientX,y:e.clientY,nx:n.x,ny:n.y,n,element,moved:false};element.setPointerCapture?.(e.pointerId);return;}}
+      if(!(state.tool==='pan'||spacePan))return;state.autoPanRestore=null;panStart={x:e.clientX,y:e.clientY,px:state.panX,py:state.panY};e.target.setPointerCapture?.(e.pointerId);
+    });
+    stage.addEventListener('pointermove',e=>{
+      if(state.tool==='connect')updateConnectionPreview(e);
+      if(areaStart){const a=areaStart;a.box.style.left=`${Math.min(a.x,e.clientX)-a.rect.left}px`;a.box.style.top=`${Math.min(a.y,e.clientY)-a.rect.top}px`;a.box.style.width=`${Math.abs(e.clientX-a.x)}px`;a.box.style.height=`${Math.abs(e.clientY-a.y)}px`;return;}
+      if(moveStart){const m=moveStart;if(!m.moved&&Math.hypot(e.clientX-m.x,e.clientY-m.y)>3){recordUndo();m.moved=true;}if(m.moved){const rect=stage.querySelector('.diagram').getBoundingClientRect(),scale=Math.min(rect.width/1000,rect.height/620)*state.zoom/100;m.n.x=Math.max(45,Math.min(900,m.nx+(e.clientX-m.x)/scale));m.n.y=Math.max(45,Math.min(570,m.ny+(e.clientY-m.y)/scale));m.element.setAttribute('transform',`translate(${m.n.x} ${m.n.y})`);drawing().edges.forEach(([a,b,ports],i)=>{if(a!==m.n.id&&b!==m.n.id)return;const p=nodes().find(n=>n.id===a),q=nodes().find(n=>n.id===b);if(ports){const route=orthogonalPath(terminalPosition(p,ports.fromPort),terminalPosition(q,ports.toPort));stage.querySelectorAll(`.sld-svg [data-index="${i}"] path`).forEach(path=>path.setAttribute('d',route));}else stage.querySelectorAll(`.sld-svg [data-index="${i}"] line`).forEach(line=>{line.setAttribute('x1',p.x);line.setAttribute('y1',p.y);line.setAttribute('x2',q.x);line.setAttribute('y2',q.y);});});}return;}
+      if(!panStart)return;state.panX=panStart.px+e.clientX-panStart.x;state.panY=panStart.py+e.clientY-panStart.y;applyCanvasTransform();
+    });
+    stage.addEventListener('pointerleave',()=>{lastConnectPointer=null;stage.querySelector('.connection-preview')?.setAttribute('d','');});
+    stage.addEventListener('pointerup',e=>{
+      if(areaStart){const a=areaStart,scale=Math.min(a.rect.width/1000,a.rect.height/620)*state.zoom/100,minX=Math.min(a.x,e.clientX),maxX=Math.max(a.x,e.clientX),minY=Math.min(a.y,e.clientY),maxY=Math.max(a.y,e.clientY);state.selectedIds=nodes().filter(n=>{const x=a.rect.left+a.rect.width/2+state.panX+(n.x-500)*scale,y=a.rect.top+a.rect.height/2+state.panY+(n.y-310)*scale;return x>=minX&&x<=maxX&&y>=minY&&y<=maxY;}).map(n=>n.id);state.selected=state.selectedIds.at(-1)||null;state.tool='select';state.panel=a.agent?'assistant':state.selected?'properties':null;areaStart=null;suppressCanvasClick=true;setTimeout(()=>suppressCanvasClick=false,0);refresh();return;}
+      if(moveStart){const m=moveStart;moveStart=null;if(m.moved){if(state.snap){m.n.x=Math.round(m.n.x/20)*20;m.n.y=Math.round(m.n.y/20)*20;}state.selected=m.n.id;state.selectedIds=[m.n.id];state.panel='properties';suppressCanvasClick=true;setTimeout(()=>suppressCanvasClick=false,0);refresh();}return;}
+      panStart=null;
+    });
+    stage.addEventListener('dblclick',e=>{const item=e.target.closest('svg [data-action=select-node]');if(!item)return;const n=nodes().find(x=>x.id===item.dataset.id);if(!n)return;const rect=stage.querySelector('.diagram').getBoundingClientRect(),scale=Math.min(rect.width/1000,rect.height/620)*state.zoom/100;state.panX=-(n.x-500)*scale;state.panY=-(n.y-310)*scale;state.selected=n.id;state.selectedIds=[n.id];state.panel='properties';refresh();});
+    stage.addEventListener('wheel',e=>{
+      if(!e.target.closest('.diagram'))return;
+      e.preventDefault();
+      if(e.ctrlKey||e.metaKey){
+        const step=Math.max(-.25,Math.min(.25,-e.deltaY*.01));
+        zoomAt(e.clientX,e.clientY,state.zoom*Math.exp(step));
+      }else{
+        const unit=e.deltaMode===1?16:e.deltaMode===2?innerHeight:1;
+        state.panX-=Math.max(-100,Math.min(100,e.deltaX*unit));
+        state.panY-=Math.max(-100,Math.min(100,e.deltaY*unit));
+        state.autoPanRestore=null;
+        applyCanvasTransform();
+      }
+    },{passive:false});
+    let gestureStartZoom=0;
+    stage.addEventListener('gesturestart',e=>{if(!e.target.closest('.diagram'))return;e.preventDefault();gestureStartZoom=state.zoom;});
+    stage.addEventListener('gesturechange',e=>{if(!gestureStartZoom||!e.target.closest('.diagram'))return;e.preventDefault();zoomAt(e.clientX,e.clientY,gestureStartZoom*e.scale);});
+    stage.addEventListener('gestureend',()=>gestureStartZoom=0);
+  </script>
+</body>
+</html>

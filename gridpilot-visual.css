@@ -1,0 +1,383 @@
+@font-face {
+  font-family: "Archivo";
+  src: url("assets/Archivo-latin-400-700.woff2") format("woff2");
+  font-style: normal;
+  font-weight: 400 700;
+  font-display: swap;
+}
+
+.focus-quick {
+  position: absolute;
+  z-index: 20;
+  top: 82px;
+  left: 24px;
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: rgb(255 255 255 / 94%);
+  box-shadow: var(--elevation-raised);
+  backdrop-filter: blur(12px);
+}
+.focus-quick .btn { position: relative; min-height: 36px; padding-inline: 9px; font-size: 12px; }
+.focus-quick .btn::before { content: ""; position: absolute; inset: -2px; }
+.focus-quick .btn.icon { width: 36px; min-height: 36px; }
+.diagram[data-tool="place"] { cursor: crosshair; }
+.diagram[data-tool="connect"] { cursor: crosshair; }
+.connection-edge { cursor: pointer; }
+.connection-port { cursor: crosshair; }
+.connection-port .port-hit { fill: transparent; stroke: transparent; pointer-events: all; }
+.connection-port .port-ring { fill: #fff; stroke: #64748b; stroke-width: 1.6; pointer-events: none; transition: stroke 120ms ease-out, stroke-width 120ms ease-out; }
+.connection-port:hover .port-ring,
+.connection-port:focus-visible .port-ring,
+.connection-port.active .port-ring { stroke: #2868ed; stroke-width: 2.6; }
+.connection-preview { fill: none; stroke: #2868ed; stroke-width: 2.5; stroke-dasharray: 8 6; pointer-events: none; }
+.canvas-ruler { position: absolute; z-index: 2; pointer-events: none; background-color: rgb(248 249 250 / 90%); }
+.canvas-ruler.ruler-x { top: 0; right: 0; left: 0; height: 18px; border-bottom: 1px solid var(--line); background-image: repeating-linear-gradient(90deg, #aeb8be 0 1px, transparent 1px 20px); background-size: 100% 6px; background-position: left bottom; background-repeat: no-repeat; }
+.canvas-ruler.ruler-y { top: 18px; bottom: 0; left: 0; width: 18px; border-right: 1px solid var(--line); background-image: repeating-linear-gradient(180deg, #aeb8be 0 1px, transparent 1px 20px); background-size: 6px 100%; background-position: right top; background-repeat: no-repeat; }
+.canvas[data-style="voltage"] .sld-svg g[data-action="select-node"] [stroke="#111"] { stroke: var(--voltage-ink); }
+.canvas[data-style="voltage"] .sld-svg g[data-action="select-node"] text { fill: var(--voltage-ink); }
+.canvas[data-style="voltage"] .sld-svg > [stroke="#111"] { stroke: #416a95; }
+.menu.view-menu { max-height: min(470px, calc(100dvh - 16px)); overflow-y: auto; }
+.shortcut-dialog {
+  position: fixed;
+  z-index: 210;
+  top: 50%;
+  left: 50%;
+  width: min(470px, calc(100vw - 32px));
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 20px 60px rgb(0 0 0 / 18%);
+  transform: translate(-50%, -50%);
+}
+.shortcut-list { padding: 10px 20px 20px; }
+.shortcut-list > div { display: flex; align-items: center; justify-content: space-between; gap: 14px; min-height: 34px; border-bottom: 1px solid var(--line); font-size: 13px; }
+.shortcut-list kbd { color: var(--muted); font: 12px var(--font); white-space: nowrap; }
+.shortcut-list p { margin: 18px 0 0; font-size: 12px; line-height: 1.5; }
+.inspector-actions { display: flex; flex-wrap: wrap; gap: 5px; margin: 0 0 18px; }
+.inspector-actions .btn { min-height: 34px; padding-inline: 9px; font-size: 11px; }
+.inspector-section { margin: 20px 0 12px; }
+.position-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+.checkline { display: flex; align-items: center; gap: 8px; min-height: 40px; color: var(--ink); font-size: 13px; }
+.checkline input { width: auto; accent-color: var(--ink); }
+@media (max-width: 740px) {
+  .focus-quick { top: 76px; left: 14px; }
+  .focus:has(.focus-sheet) .focus-quick { display: none; }
+}
+@media print { .focus-quick { display: none !important; } }
+
+/* GridPilot's Archivo type, blue-gray canvas, round surfaces and quiet controls. */
+html[data-visual="gridpilot"] {
+  --paper: #f7fafb;
+  --white: #fff;
+  --soft: #f5f7f8;
+  --ink: #202020;
+  --muted: #6c7278;
+  --faint: #777e84;
+  --line: #e4e7e9;
+  --strong: #cbd3d8;
+  --brand: #426780;
+  --brand-soft: #eaf1f5;
+  --red: #a04146;
+  --red-soft: #f8ebeb;
+  --amber: #826638;
+  --amber-soft: #f4eee3;
+  --font: "Archivo", Arial, Helvetica, sans-serif;
+  --shadow: 0 1px 2px rgb(32 32 32 / 3%), 0 14px 30px rgb(70 115 141 / 10%);
+  --elevation-raised: 0 2px 5px rgb(32 32 32 / 3%), 0 12px 28px rgb(70 115 141 / 12%);
+  --elevation-hover: 0 4px 10px rgb(32 32 32 / 5%), 0 18px 36px rgb(70 115 141 / 15%);
+  --gridpilot-page-background: linear-gradient(70deg, rgb(247 247 247 / 15%) 0%, rgb(111 119 129 / 6%) 50.48%, rgb(7 103 170 / 15%) 74.52%), #fff;
+}
+html[data-visual="gridpilot"] body { background: var(--gridpilot-page-background); }
+html[data-visual="gridpilot"] button:focus-visible,
+html[data-visual="gridpilot"] input:focus-visible,
+html[data-visual="gridpilot"] select:focus-visible,
+html[data-visual="gridpilot"] textarea:focus-visible,
+html[data-visual="gridpilot"] [role="button"]:focus-visible {
+  outline: 2px solid #40484d;
+  outline-offset: 2px;
+}
+html[data-visual="gridpilot"] .app.focus {
+  background: var(--gridpilot-page-background);
+}
+html[data-visual="gridpilot"] .focus > .canvas {
+  inset: 64px 12px 12px;
+  border: 1px solid #edf0f2;
+  border-radius: 22px;
+  background: linear-gradient(145deg, #fff 48%, #f8fbfd 100%);
+  box-shadow: 0 10px 24px rgb(31 31 31 / 3%);
+}
+html[data-visual="gridpilot"] .focus > .canvas.surface-grid {
+  background-color: #fff;
+  background-image: radial-gradient(#dfe8ed 1px, transparent 1px);
+}
+html[data-visual="gridpilot"] .focus-top {
+  top: 0;
+  left: 0;
+  right: 0;
+  min-height: 56px;
+  gap: 7px;
+  padding: 0 16px;
+  border-bottom: 1px solid #e7ebed;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
+}
+html[data-visual="gridpilot"] .focus-top .brand {
+  padding-right: 6px;
+  border-right: 0;
+  font-size: 16px;
+  font-weight: 500;
+  letter-spacing: -.055em;
+}
+html[data-visual="gridpilot"] .focus-top .brand svg { width: 22px; height: 24px; }
+html[data-visual="gridpilot"] .focus-project { min-width: 96px; }
+html[data-visual="gridpilot"] .focus-project:hover { background: rgb(255 255 255 / 60%); }
+html[data-visual="gridpilot"] .focus-drawing { width: min(270px, 27vw); max-width: 270px; }
+html[data-visual="gridpilot"] .focus-drawing .drawing-select {
+  min-height: 40px;
+  padding-left: 10px;
+  border-color: transparent;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgb(32 32 32 / 5%);
+  font-weight: 500;
+}
+html[data-visual="gridpilot"] .focus-drawing .drawing-select:hover { border-color: #cbd3d8; background: #fff; }
+html[data-visual="gridpilot"] .label { font-size: 10px; font-weight: 500; letter-spacing: .1em; }
+html[data-visual="gridpilot"] .focus-save { color: var(--muted); }
+html[data-visual="gridpilot"] .save-dot { background: #456e5e; }
+html[data-visual="gridpilot"] .btn {
+  border-color: transparent;
+  border-radius: 999px;
+  background: #fff;
+  font-weight: 500;
+}
+html[data-visual="gridpilot"] .btn:hover { border-color: transparent; background: #f5f7f8; }
+html[data-visual="gridpilot"] .btn.primary {
+  border-color: #202020;
+  background: #202020;
+  color: #fff;
+}
+html[data-visual="gridpilot"] .btn.primary:hover { border-color: #333; background: #333; }
+html[data-visual="gridpilot"] .btn.quiet { background: transparent; }
+html[data-visual="gridpilot"] .btn.quiet:hover { background: rgb(255 255 255 / 72%); }
+html[data-visual="gridpilot"] .tabset,
+html[data-visual="gridpilot"] .review-tabs {
+  gap: 4px;
+  padding: 2px;
+  border-radius: 999px;
+  background: #fff;
+}
+html[data-visual="gridpilot"] .tabset button,
+html[data-visual="gridpilot"] .review-tabs button { border-radius: 999px; font-weight: 500; }
+html[data-visual="gridpilot"] .tabset button[aria-selected="true"],
+html[data-visual="gridpilot"] .review-tabs button[aria-selected="true"] {
+  border: 1px solid #202020;
+  background: #fff;
+  box-shadow: none;
+}
+html[data-visual="gridpilot"] .focus-top .tabset {
+  gap: 6px;
+  padding: 3px;
+  border: 1px solid #e8ecee;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(70 115 141 / 9%);
+}
+html[data-visual="gridpilot"] .focus-top .tabset button {
+  min-height: 34px;
+  padding-inline: 10px;
+  border: 1px solid transparent;
+  border-radius: 999px;
+  background: transparent;
+  color: var(--muted);
+  font-size: 11px;
+  font-weight: 500;
+}
+html[data-visual="gridpilot"] .focus-top .tabset button:hover {
+  background: var(--soft);
+  color: var(--ink);
+}
+html[data-visual="gridpilot"] .focus-top .tabset button[aria-selected="true"] {
+  border-color: transparent;
+  background: #202020;
+  color: #fff;
+  box-shadow: none;
+}
+html[data-visual="gridpilot"] .focus-top .tabset button[aria-selected="true"]:hover {
+  background: #202020;
+  color: #fff;
+}
+html[data-visual="gridpilot"] .focus-top .tabset .count {
+  margin-left: 2px;
+  color: inherit;
+  font-size: 11px;
+}
+html[data-visual="gridpilot"] .focus-quick {
+  top: 80px;
+  left: 24px;
+  border-color: #e8ecee;
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 4px 14px rgb(70 115 141 / 9%);
+}
+html[data-visual="gridpilot"] .focus-quick .btn { border-radius: 999px; }
+html[data-visual="gridpilot"] .focus-rail {
+  bottom: 18px;
+  gap: 2px;
+  padding: 4px;
+  border: 1px solid #e8ecee;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: var(--elevation-raised);
+}
+html[data-visual="gridpilot"] .focus-rail button { border-radius: 50%; }
+html[data-visual="gridpilot"] .focus-rail button[aria-pressed="true"],
+html[data-visual="gridpilot"] .focus-rail button[aria-pressed="true"]:hover { background: #202020; color: #fff; }
+html[data-visual="gridpilot"] .focus-rail button:hover { background: #f3f5f6; }
+html[data-visual="gridpilot"] .focus-sheet {
+  top: 84px;
+  right: 24px;
+  bottom: 72px;
+  border: 1px solid #e6ebee;
+  border-radius: 18px;
+  background: #fff;
+  box-shadow: 0 16px 34px rgb(70 115 141 / 14%), 0 4px 12px rgb(70 115 141 / 5%);
+}
+html[data-visual="gridpilot"] .focus-sheet .panel-head { min-height: 50px; padding-inline: 14px; }
+html[data-visual="gridpilot"] .focus-sheet .panel-head h2 { font-size: 14px; font-weight: 500; letter-spacing: -.025em; }
+html[data-visual="gridpilot"] .focus-sheet .panel-body { padding: 16px; }
+html[data-visual="gridpilot"] .agent-composer { border-color: #cbd1d5; border-radius: 16px; }
+html[data-visual="gridpilot"] .agent-composer textarea:focus-visible { outline: none; }
+html[data-visual="gridpilot"] .agent-composer-actions { border-top: 0; }
+html[data-visual="gridpilot"] .agent-composer .agent-tools .btn:hover { background: #f3f5f6; color: #202020; }
+html[data-visual="gridpilot"] .agent-composer .agent-send { border-radius: 999px; }
+html[data-visual="gridpilot"] .agent-footer .tabset {
+  display: inline-flex;
+  gap: 2px;
+  margin-bottom: 10px;
+  padding: 2px;
+  background: transparent;
+}
+html[data-visual="gridpilot"] .agent-footer .tabset button {
+  position: relative;
+  min-height: 28px;
+  padding: 0 10px;
+  border: 0;
+  border-radius: 7px;
+  font-size: 11px;
+  font-weight: 500;
+}
+html[data-visual="gridpilot"] .agent-footer .tabset button::before {
+  content: "";
+  position: absolute;
+  inset: -6px 0;
+}
+html[data-visual="gridpilot"] .agent-footer .tabset button:hover { background: #f4f6f7; color: #202020; }
+html[data-visual="gridpilot"] .agent-footer .tabset button[aria-selected="true"],
+html[data-visual="gridpilot"] .agent-footer .tabset button[aria-selected="true"]:hover {
+  border: 0;
+  background: #edf0f2;
+  color: #202020;
+  box-shadow: none;
+}
+html[data-visual="gridpilot"] .search,
+html[data-visual="gridpilot"] .field input,
+html[data-visual="gridpilot"] .field select,
+html[data-visual="gridpilot"] .field textarea {
+  min-height: 40px;
+  border-color: #e5e9eb;
+  border-radius: 10px;
+  background: #f8fafb;
+}
+html[data-visual="gridpilot"] .field select {
+  background-image: url("assets/chevron-down.svg");
+  background-position: right 13px center;
+  background-repeat: no-repeat;
+  background-size: 14px 14px;
+}
+html[data-visual="gridpilot"] .tree-drawing,
+html[data-visual="gridpilot"] .tree-level,
+html[data-visual="gridpilot"] .tree-device,
+html[data-visual="gridpilot"] .outline-project button { border-radius: 11px; }
+html[data-visual="gridpilot"] .tree-drawing[aria-current="true"],
+html[data-visual="gridpilot"] .tree-device[aria-current="true"] { background: #eaf1f5; box-shadow: none; }
+html[data-visual="gridpilot"] .tree-drawing:hover,
+html[data-visual="gridpilot"] .tree-level:hover,
+html[data-visual="gridpilot"] .tree-device:hover { background: #f5f7f8; }
+html[data-visual="gridpilot"] .note { border-radius: 10px; background: #f5f7f8; }
+html[data-visual="gridpilot"] .pill { border-radius: 999px; }
+html[data-visual="gridpilot"] .filters button { border-radius: 999px; }
+html[data-visual="gridpilot"] .filters button[aria-pressed="true"] { background: #202020; color: #fff; }
+html[data-visual="gridpilot"] .issue { border-radius: 10px; }
+html[data-visual="gridpilot"] .focus .canvas-metrics,
+html[data-visual="gridpilot"] .focus .zoom {
+  min-height: 42px;
+  border: 1px solid #e8ecee;
+  border-radius: 999px;
+  background: rgb(255 255 255 / 96%);
+  box-shadow: 0 4px 14px rgb(70 115 141 / 8%);
+}
+html[data-visual="gridpilot"] .focus .canvas-metrics button { border-radius: 999px; }
+html[data-visual="gridpilot"] .focus .zoom button { border-radius: 50%; }
+html[data-visual="gridpilot"] .empty {
+  width: min(400px, calc(100% - 40px));
+  padding: 24px;
+  border: 1px solid #e8ecee;
+  border-radius: 18px;
+  box-shadow: 0 16px 34px rgb(70 115 141 / 12%);
+}
+html[data-visual="gridpilot"] .empty h2,
+html[data-visual="gridpilot"] .project-main h1 {
+  font-weight: 400;
+  letter-spacing: -.055em;
+  background: linear-gradient(100deg, #4c5358 8%, #426780 56%, #376b95 100%);
+  background-clip: text;
+  -webkit-background-clip: text;
+  color: transparent;
+}
+html[data-visual="gridpilot"] .drawer { border-radius: 18px 0 0 18px; }
+html[data-visual="gridpilot"] .drawer-head { padding-inline: 18px; }
+html[data-visual="gridpilot"] .drawer-body { padding: 18px; }
+html[data-visual="gridpilot"] .drawer-head h2 { font-weight: 500; letter-spacing: -.045em; }
+html[data-visual="gridpilot"] .palette-grid button { border-radius: 10px; }
+html[data-visual="gridpilot"] .glyph { border-radius: 7px; }
+html[data-visual="gridpilot"] .menu { border: 1px solid #e8ecee; border-radius: 12px; }
+html[data-visual="gridpilot"] .menu button { border-radius: 8px; }
+html[data-visual="gridpilot"] .message { border-radius: 12px; }
+html[data-visual="gridpilot"] .message.user { background: #202020; }
+html[data-visual="gridpilot"] .project-home { background: var(--gridpilot-page-background); }
+html[data-visual="gridpilot"] .project-home .bar { height: 72px; border-color: #e7ebed; background: transparent; }
+html[data-visual="gridpilot"] .project-card { border: 1px solid #e8ecee; border-radius: 18px; }
+
+@media (max-width: 1000px) {
+  html[data-visual="gridpilot"] .focus-drawing { width: 250px; max-width: 250px; }
+}
+@media (max-width: 740px) {
+  html[data-visual="gridpilot"] .focus-top { min-height: 56px; padding: 0 10px; }
+  html[data-visual="gridpilot"] .focus-drawing { width: min(42vw, 240px); max-width: min(42vw, 240px); }
+  html[data-visual="gridpilot"] .focus > .canvas { inset: 64px 8px 8px; border-radius: 18px; }
+  html[data-visual="gridpilot"] .focus-quick { top: 76px; left: 14px; }
+  html[data-visual="gridpilot"] .focus-sheet { top: 78px; right: 12px; bottom: 70px; }
+  html[data-visual="gridpilot"] .focus-rail { bottom: 12px; }
+}
+@media (min-width: 741px) and (max-width: 900px) {
+  .focus:has(.focus-sheet) .focus-quick,
+  html[data-visual="gridpilot"] .focus:has(.focus-sheet) .focus-quick { top: 136px; left: 14px; }
+}
+@media (pointer: coarse) {
+  .focus-quick .btn,
+  .focus-top .btn,
+  .focus-top .tabset button { min-height: 44px; }
+  html[data-visual="gridpilot"] .agent-footer .tabset button { min-height: 44px; }
+  html[data-visual="gridpilot"] .agent-footer .tabset button::before { inset: 0; }
+  .focus-quick .btn.icon,
+  .focus-top .btn.icon { min-height: 44px; min-width: 44px; width: 44px; }
+  .focus-rail button { width: 44px; height: 44px; flex-basis: 44px; }
+}
